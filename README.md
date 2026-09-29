@@ -2,6 +2,8 @@
 
 Personal insurance marketing website for Anvar Baltakhojayev.
 
+The dedicated veteran ad funnel is available at `/veterans/`. Append `?preview=1` to review the questionnaire before the final video is installed. In production, the questionnaire unlocks only after the configured video emits its completion event.
+
 - Review site: https://anvar-life-retirement.anvarxadja.chatgpt.site
 - Booking: https://calendly.com/anvar-life/15min
 - Source: https://github.com/Dante9988/anvar-life
