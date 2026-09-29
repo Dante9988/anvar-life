@@ -29,10 +29,15 @@ Inputs stay in memory and reset on reload. Only display preferences may be store
 | dist/site.js | Navigation and interactive behavior |
 | dist/experience.mjs | Teaching arithmetic and annuity lesson content |
 | dist/family.jpg | Illustrative stock photo |
+| dist/anvar-portrait.jpeg | Approved portrait of Anvar |
 | dist/favicon.svg | Site monogram |
+| dist/robots.txt | Search crawler permissions and sitemap location |
+| dist/sitemap.xml | Canonical public URL for search discovery |
 | scripts/validate.mjs | Static integrity and accessibility-hook checks |
 | scripts/experience.test.mjs | Boundary and scenario checks for teaching models |
 | .openai/hosting.json | Existing Sites project identity and static-output path |
+| vercel.json | Vercel output path and security headers |
+| scripts/prepare-deployment.mjs | Rewrites canonical SEO URLs for the deployment domain |
 
 ## Local use
 
@@ -45,9 +50,17 @@ python3 -m http.server 8080 --directory dist
 
 Open the local server in your own browser. Other static hosts can serve the dist directory directly. The hosted Sites version uses .openai/hosting.json; preserve its project identity when updating that existing site.
 
-## Add a portrait
+## Vercel deployment
 
-Add an approved portrait asset to dist/. Replace .portrait-placeholder inside #agent-portrait with an image. Remove the placeholder wrapper’s role="img" and its placeholder aria-label, give the actual image descriptive alternative text, and use width:100%;height:100%;object-fit:cover. The reserved space is intentional.
+Import `Dante9988/anvar-life` into Vercel. The repository includes its build command and `dist` output directory. The build reads Vercel’s `VERCEL_PROJECT_PRODUCTION_URL` system value and rewrites the canonical URL, Open Graph URL, JSON-LD, robots file, and sitemap to that production domain. If using a custom domain, add a Production environment variable named `SITE_URL` with the full HTTPS origin, such as `https://example.com`, and redeploy.
+
+The site makes no browser API requests and therefore does not need CORS response headers. Adding `Access-Control-Allow-Origin: *` would broaden access without solving a current problem. The Content Security Policy permits the site’s own assets and the two Google Fonts origins it actually uses. Update the policy deliberately if a form, analytics tool, API, or embedded scheduler is added later.
+
+After the first production deployment, verify that the public domain is the one shown in the page canonical tag and `sitemap.xml`. Connect that production URL to Google Search Console rather than a preview deployment URL.
+
+## Portrait
+
+The approved portrait is displayed in the Meet Anvar section and as a circular brand portrait in the header and footer. Keep the square source image so responsive crops remain predictable, and preserve meaningful alternative text when replacing the main portrait.
 
 ## Content maintenance
 
@@ -57,7 +70,8 @@ Add an approved portrait asset to dist/. Replace .portrait-placeholder inside #a
 - Interactive numbers are teaching examples. They do not replace needs analysis, underwriting, carrier illustrations, or contract review.
 - Keep required product limitations close to each example.
 - Confirm the Calendly location, availability, time zone, and reminders in the owner’s account. Tests do not create real appointments.
-- Keep noindex,nofollow while the site remains a private review; review indexing and the canonical domain when launching publicly.
+- Keep the canonical URL, sitemap, robots file, Open Graph URL, and JSON-LD URLs synchronized if the domain changes.
+- Verify the public URL in Google Search Console, submit sitemap.xml, and request indexing after launch. Indexing and ranking remain Google’s decision.
 - Review privacy language if forms, analytics, embeds, or integrations are added.
 
 ## Research and attribution

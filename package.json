@@ -1,0 +1,11 @@
+{
+  "name": "anvar-life",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/validate.mjs && node --test scripts/experience.test.mjs",
+    "build": "node scripts/prepare-deployment.mjs && npm run check"
+  },
+  "engines": { "node": ">=22" }
+}

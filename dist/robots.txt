@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://anvar-life-retirement.anvarxadja.chatgpt.site/sitemap.xml
