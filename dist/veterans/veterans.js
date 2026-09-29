@@ -8,12 +8,14 @@ const unlockStatus = $('#unlock-status');
 const previewNote = $('#preview-note');
 const videoSource = videoShell.dataset.videoSrc?.trim();
 const previewMode = new URLSearchParams(location.search).get('preview') === '1';
+const followupCtas = all('[data-review-cta]');
 
 function unlockReview(message) {
   startButton.disabled = false;
   unlockStatus.textContent = message;
   $('.lock-icon').textContent = '✓';
   $('.lock-icon').style.color = 'var(--accent)';
+  followupCtas.forEach(link => { link.href = '#review'; });
 }
 
 if (videoSource) {
@@ -27,17 +29,29 @@ if (videoSource) {
   video.addEventListener('ended', () => unlockReview('Video complete. Your private coverage review is ready.'));
 } else if (previewMode) {
   previewNote.hidden = false;
-  startButton.textContent = 'Preview the coverage review';
+  startButton.textContent = "Preview my family's protection review";
   unlockReview('Preview unlocked. Add the final video before running ads.');
 } else {
   unlockStatus.textContent = 'The final video is being prepared. The review will unlock when it ends.';
 }
 
 startButton.addEventListener('click', () => {
+  if (startButton.disabled) return;
+  if (!$('#result').hidden) {
+    $('#result').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    $('#result-title').focus({ preventScroll: true });
+    return;
+  }
   $('#review').hidden = false;
   $('#review').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   all('.quiz-step:not([hidden]) input, .quiz-step:not([hidden]) select')[0]?.focus({ preventScroll: true });
 });
+
+followupCtas.forEach(link => link.addEventListener('click', event => {
+  if (startButton.disabled) return;
+  event.preventDefault();
+  startButton.click();
+}));
 
 const form = $('#veteran-review');
 const steps = all('.quiz-step');
@@ -118,6 +132,10 @@ function finishReview() {
   try { sessionStorage.setItem('veteran-review-summary', JSON.stringify(Object.fromEntries(summary))); } catch { /* Optional browser storage. */ }
   $('#review').hidden = true;
   $('#result').hidden = false;
+  followupCtas.forEach(link => {
+    link.href = '#result';
+    link.textContent = 'Continue to my call options';
+  });
   $('#result').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   $('#result-title').focus?.({ preventScroll: true });
 }

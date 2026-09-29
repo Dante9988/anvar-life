@@ -4,6 +4,8 @@ Personal insurance marketing website for Anvar Baltakhojayev.
 
 The dedicated veteran ad funnel is available at `/veterans/`. Append `?preview=1` to review the questionnaire before the final video is installed. In production, the questionnaire unlocks only after the configured video emits its completion event.
 
+The funnel uses a family-income message, coral-red emphasis, and concrete planning needs (home, everyday expenses, and financial breathing room). Its family example and photo are explicitly illustrative, not testimonials. Repeated CTAs preserve the video gate and return completed visitors to their result. There are no countdowns, fabricated deadlines, or approval promises. Google Ads' clickbait policy prohibits using death or severe distress to pressure immediate action; review both ad creative and destination with agency/carrier compliance before launch.
+
 - Review site: https://anvar-life-retirement.anvarxadja.chatgpt.site
 - Booking: https://calendly.com/anvar-life/15min
 - Source: https://github.com/Dante9988/anvar-life
