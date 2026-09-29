@@ -17,7 +17,7 @@ function deploymentOrigin() {
 }
 
 const targetOrigin = deploymentOrigin();
-for (const relativePath of ['dist/index.html', 'dist/robots.txt', 'dist/sitemap.xml']) {
+for (const relativePath of ['dist/index.html', 'dist/veterans/index.html', 'dist/robots.txt', 'dist/sitemap.xml']) {
   const path = resolve(root, relativePath);
   const current = readFileSync(path, 'utf8');
   writeFileSync(path, current.replaceAll(sourceOrigin, targetOrigin));
