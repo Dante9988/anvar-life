@@ -45,7 +45,10 @@ assert.equal((funnelCss.match(/\{/g)||[]).length, (funnelCss.match(/\}/g)||[]).l
 const funnelIds = [...funnelHtml.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
 assert.equal(new Set(funnelIds).size, funnelIds.length, 'Duplicate funnel HTML id');
 const funnelAssets = [...funnelHtml.matchAll(/(?:src|href)="([^"#]+)"/g)].map(m => m[1]).filter(v => !/^(https?:|data:|mailto:|tel:)/.test(v));
-funnelAssets.forEach(asset => assert(existsSync(resolve(root, 'dist/veterans', asset)), `Missing funnel asset: ${asset}`));
+funnelAssets.filter(asset => asset !== '/').forEach(asset => {
+  const assetPath = asset.startsWith('/') ? resolve(root, 'dist', asset.slice(1)) : resolve(root, 'dist/veterans', asset);
+  assert(existsSync(assetPath), `Missing funnel asset: ${asset}`);
+});
 assert(funnelHtml.includes('not affiliated with or endorsed by'), 'Missing funnel VA affiliation disclosure');
 assert(funnelHtml.includes('NPN 22327730') && funnelHtml.includes('(718) 308-6929'), 'Missing funnel identity');
 assert(!/guaranteed approval|VA[- ]discount|offer expires|limited time|access to every carrier|licensed with every carrier/i.test(funnelHtml), 'Misleading funnel claim');
