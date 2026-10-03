@@ -1,42 +1,18 @@
 const $ = selector => document.querySelector(selector);
 const all = (selector, context = document) => [...context.querySelectorAll(selector)];
-const videoShell = $('.video-shell');
-const video = $('.funnel-video');
-const placeholder = $('.video-placeholder');
 const startButton = $('#start-review');
-const unlockStatus = $('#unlock-status');
-const previewNote = $('#preview-note');
-const videoSource = videoShell.dataset.videoSrc?.trim();
-const previewMode = new URLSearchParams(location.search).get('preview') === '1';
-const followupCtas = all('[data-review-cta]');
+startButton.hidden = false;
 
-function unlockReview(message) {
-  startButton.disabled = false;
-  unlockStatus.textContent = message;
-  $('.lock-icon').textContent = '✓';
-  $('.lock-icon').style.color = 'var(--accent)';
-  followupCtas.forEach(link => { link.href = '#review'; });
-}
-
-if (videoSource) {
-  video.src = videoSource;
-  video.hidden = false;
-  placeholder.hidden = true;
-  video.addEventListener('timeupdate', () => {
-    const percent = video.duration ? Math.min(100, video.currentTime / video.duration * 100) : 0;
-    $('.video-progress span').style.width = `${percent}%`;
-  });
-  video.addEventListener('ended', () => unlockReview('Video complete. Your private coverage review is ready.'));
-} else if (previewMode) {
-  previewNote.hidden = false;
-  startButton.textContent = "Preview my family's protection review";
-  unlockReview('Preview unlocked. Add the final video before running ads.');
-} else {
-  unlockStatus.textContent = 'The final video is being prepared. The review will unlock when it ends.';
-}
+// Direct booking works without JavaScript. Preserve campaign tags only;
+// questionnaire answers never leave this page or enter browser storage.
+const campaign = new URLSearchParams(location.search);
+const calendar = new URL('https://calendly.com/anvar-life/15min');
+['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach(key => {
+  if (campaign.get(key)) calendar.searchParams.set(key, campaign.get(key));
+});
+all('[data-booking-cta]').forEach(link => { link.href = calendar.toString(); });
 
 startButton.addEventListener('click', () => {
-  if (startButton.disabled) return;
   if (!$('#result').hidden) {
     $('#result').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     $('#result-title').focus({ preventScroll: true });
@@ -46,12 +22,6 @@ startButton.addEventListener('click', () => {
   $('#review').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   all('.quiz-step:not([hidden]) input, .quiz-step:not([hidden]) select')[0]?.focus({ preventScroll: true });
 });
-
-followupCtas.forEach(link => link.addEventListener('click', event => {
-  if (startButton.disabled) return;
-  event.preventDefault();
-  startButton.click();
-}));
 
 const form = $('#veteran-review');
 const steps = all('.quiz-step');
@@ -123,21 +93,17 @@ function finishReview() {
     ? 'Your answers are ready for a licensed conversation. They do not determine approval or price; Anvar will confirm needs, active carrier appointments, underwriting, and policy terms during the call.'
     : 'Your state requires a licensing and availability check before private insurance options can be discussed. Scheduling a call does not guarantee that Anvar or a participating carrier can serve your state.';
 
-  const campaign = new URLSearchParams(location.search);
-  const calendar = new URL('https://calendly.com/anvar-life/15min');
-  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(key => {
-    if (campaign.get(key)) calendar.searchParams.set(key, campaign.get(key));
-  });
-  $('#book-call').href = calendar.toString();
-  try { sessionStorage.setItem('veteran-review-summary', JSON.stringify(Object.fromEntries(summary))); } catch { /* Optional browser storage. */ }
   $('#review').hidden = true;
   $('#result').hidden = false;
-  followupCtas.forEach(link => {
-    link.href = '#result';
-    link.textContent = 'Continue to my call options';
-  });
+  startButton.textContent = 'View my preparation notes';
   $('#result').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   $('#result-title').focus?.({ preventScroll: true });
 }
+
+// Keep Enter from navigating or submitting this local-only checklist.
+form.addEventListener('submit', event => {
+  event.preventDefault();
+  nextButton.click();
+});
 
 showStep(0);

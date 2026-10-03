@@ -13,7 +13,7 @@ function element(properties = {}) {
     textContent: '', href: '', scrolls: 0, focused: false,
     addEventListener(type, fn) { this.listeners[type] = fn; },
     click() { if (!this.disabled) this.listeners.click?.({ preventDefault() {} }); },
-    scrollIntoView() { this.scrolls++; },
+    scrollIntoView(options) { this.scrolls++; this.scrollOptions = options; },
     focus() { this.focused = true; },
     querySelectorAll() { return []; },
     querySelector() { return null; },
@@ -21,18 +21,16 @@ function element(properties = {}) {
   };
 }
 
-function setup({ search = '', videoSource = '', state = 'WV' } = {}) {
+function setup({ search = '', state = 'WV', reducedMotion = true } = {}) {
   const nodes = new Map();
   const node = selector => {
     if (!nodes.has(selector)) nodes.set(selector, element());
     return nodes.get(selector);
   };
-  const cta = element({ href: '#watch' });
+  const cta = element({ href: 'https://calendly.com/anvar-life/15min' });
   const firstInput = element();
   const steps = Array.from({ length: 5 }, (_, i) => element({ dataset: { step: String(i + 1) } }));
-  node('.video-shell').dataset.videoSrc = videoSource;
-  node('.funnel-video').hidden = true;
-  node('#start-review').disabled = true;
+  node('#start-review').hidden = true;
   node('#review').hidden = true;
   node('#result').hidden = true;
   const formAnswers = { state, service: 'Veteran', age: '55–64', coverage: '$50,000–$100,000', budget: '$75–$125' };
@@ -47,55 +45,41 @@ function setup({ search = '', videoSource = '', state = 'WV' } = {}) {
       querySelector: node,
       querySelectorAll(selector) {
         if (selector === '.quiz-step') return steps;
-        if (selector === '[data-review-cta]') return [cta];
+        if (selector === '[data-booking-cta]') return [cta, node('#book-call')];
         if (selector.startsWith('.quiz-step:not')) return [firstInput];
         return [];
       },
     },
     location: { search }, URL, URLSearchParams,
-    matchMedia: () => ({ matches: true }),
+    matchMedia: () => ({ matches: reducedMotion }),
     FormData: class { get(key) { return formAnswers[key] || null; } },
     sessionStorage: { setItem: (key, value) => stored.set(key, value) },
   });
   runInContext(source, context);
-  return { node, cta, steps, context, stored };
+  return { node, cta, steps, context, stored, firstInput };
 }
 
-test('normal visitors cannot bypass the video through repeated CTAs', () => {
+test('normal visitors can immediately book or open the optional review', () => {
   const { node, cta } = setup();
-  assert.equal(node('#start-review').disabled, true);
-  assert.equal(cta.href, '#watch');
-  cta.click();
+  assert.equal(cta.href, 'https://calendly.com/anvar-life/15min');
+  assert.equal(node('#start-review').hidden, false);
   node('#start-review').click();
-  assert.equal(node('#review').hidden, true);
-});
-
-test('preview mode unlocks the repeated CTA and displays the questionnaire', () => {
-  const { node, cta } = setup({ search: '?preview=1' });
-  assert.equal(node('#start-review').disabled, false);
-  assert.equal(cta.href, '#review');
-  cta.click();
   assert.equal(node('#review').hidden, false);
-  assert.equal(node('#result').hidden, true);
 });
 
-test('configured video remains locked until completion even on a preview URL', () => {
-  const { node, cta } = setup({ search: '?preview=1', videoSource: '/veterans/overview.mp4' });
-  assert.equal(node('.funnel-video').hidden, false);
-  assert.equal(node('.video-placeholder').hidden, true);
-  assert.equal(node('#start-review').disabled, true);
-  node('.funnel-video').listeners.ended();
-  assert.equal(node('#start-review').disabled, false);
-  assert.equal(cta.href, '#review');
+test('legacy preview URLs no longer change access to booking or review', () => {
+  const { node, cta } = setup({ search: '?preview=1' });
+  assert.equal(cta.href, 'https://calendly.com/anvar-life/15min');
+  node('#start-review').click();
+  assert.equal(node('#review').hidden, false);
 });
 
-test('completed visitors return to their result, not a reopened questionnaire', () => {
-  const { node, cta, context } = setup({ search: '?preview=1' });
-  cta.click();
+test('completed visitors return to their result while booking stays direct', () => {
+  const { node, cta, context } = setup();
+  node('#start-review').click();
   runInContext('finishReview()', context);
-  assert.equal(cta.href, '#result');
-  assert.equal(cta.textContent, 'Continue to my call options');
-  cta.click();
+  assert.equal(cta.href, 'https://calendly.com/anvar-life/15min');
+  node('#start-review').click();
   assert.equal(node('#review').hidden, true);
   assert.equal(node('#result').hidden, false);
   assert.equal(node('#result-title').focused, true);
@@ -108,7 +92,7 @@ test('booking attribution keeps UTM parameters without leaking answers or previe
   assert.equal(booking.origin + booking.pathname, 'https://calendly.com/anvar-life/15min');
   assert.deepEqual([...booking.searchParams.keys()], ['utm_source', 'utm_campaign']);
   assert.equal(booking.searchParams.get('utm_source'), 'facebook');
-  assert.equal(stored.has('veteran-review-summary'), true);
+  assert.equal(stored.size, 0);
   assert.match(node('#result-copy').textContent, /do not determine approval or price/);
 });
 
@@ -127,4 +111,117 @@ test('required fields and unselected coverage priorities fail validation', () =>
   assert.equal(runInContext('stepIsValid(steps[0])', context), true);
   assert.equal(runInContext('stepIsValid(steps[2])', context), false);
   assert.equal(runInContext('stepIsValid(steps[3])', context), false);
+});
+
+
+test('every visible booking CTA is a real link before JavaScript runs', () => {
+  const html = readFileSync(new URL('../dist/veterans/index.html', import.meta.url), 'utf8');
+  const bookingTags = [...html.matchAll(/<a\b[^>]*data-booking-cta[^>]*>/g)].map(match => match[0]);
+  assert.equal(bookingTags.length, 5);
+  bookingTags.forEach(tag => {
+    assert.match(tag, /href="https:\/\/calendly\.com\/anvar-life\/15min"/);
+    assert.doesNotMatch(tag, /disabled|aria-disabled|href="#/);
+    assert.match(tag, /rel="noopener noreferrer"/);
+  });
+  assert.match(html, /id="start-review"[^>]*hidden/);
+  assert.doesNotMatch(html, /<video\b|href="#watch"|data-video-src|unlock-status/);
+});
+
+test('UTM handoff works before starting or completing the questionnaire', () => {
+  const { cta, node } = setup({ search: '?utm_source=facebook&utm_medium=paid&utm_campaign=family&utm_content=first&utm_term=coverage&email=private&preview=1' });
+  const params = new URL(cta.href).searchParams;
+  assert.deepEqual([...params.keys()], ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']);
+  assert.equal(params.get('utm_campaign'), 'family');
+  assert.equal(cta.href, node('#book-call').href);
+  assert.equal(node('#review').hidden, true);
+});
+
+test('starting and repeatedly opening the review preserves progress and focuses an input', () => {
+  const { node, context, firstInput } = setup();
+  node('#start-review').click();
+  assert.equal(firstInput.focused, true);
+  runInContext('showStep(2)', context);
+  node('#start-review').click();
+  assert.equal(runInContext('currentStep', context), 2);
+  assert.equal(node('#step-label').textContent, 'Step 3 of 5');
+});
+
+test('invalid input shows the error without advancing or changing the booking link', () => {
+  const { node, cta, steps, context } = setup();
+  steps[0].querySelectorAll = () => [{ type: 'radio', name: 'service' }];
+  node('#next-step').click();
+  assert.equal(node('#form-error').hidden, false);
+  assert.equal(runInContext('currentStep', context), 0);
+  assert.equal(cta.href, 'https://calendly.com/anvar-life/15min');
+});
+
+test('Back is bounded at the first step and clears stale validation errors', () => {
+  const { node, steps, context } = setup();
+  runInContext('showStep(2)', context);
+  node('#form-error').hidden = false;
+  node('#back-step').click();
+  assert.equal(node('#step-label').textContent, 'Step 2 of 5');
+  assert.equal(node('#form-error').hidden, true);
+  node('#back-step').click();
+  node('#back-step').click();
+  assert.equal(runInContext('currentStep', context), 0);
+  assert.equal(node('#back-step').hidden, true);
+  assert.equal(steps.filter(step => !step.hidden).length, 1);
+});
+
+test('required state, age, and health-conversation fields cannot be skipped', () => {
+  const { steps, context } = setup();
+  const state = { type: 'select-one', value: '' };
+  steps[1].querySelectorAll = () => [state];
+  assert.equal(runInContext('stepIsValid(steps[1])', context), false);
+  state.value = 'OTHER';
+  assert.equal(runInContext('stepIsValid(steps[1])', context), true);
+  const health = { type: 'checkbox', checked: false };
+  steps[4].querySelectorAll = () => [health];
+  assert.equal(runInContext('stepIsValid(steps[4])', context), false);
+  health.checked = true;
+  assert.equal(runInContext('stepIsValid(steps[4])', context), true);
+});
+
+test('Enter prevents native form submission and uses the same validation path', () => {
+  const { node, steps, context } = setup();
+  let prevented = false;
+  steps[0].querySelectorAll = () => [{ type: 'radio', name: 'service' }];
+  node('#veteran-review').listeners.submit({ preventDefault() { prevented = true; } });
+  assert.equal(prevented, true);
+  assert.equal(node('#form-error').hidden, false);
+  assert.equal(runInContext('currentStep', context), 0);
+});
+
+test('the five-step event flow reaches results without applying for or purchasing coverage', () => {
+  const { node, steps, stored } = setup();
+  steps.forEach(step => { step.querySelector = () => ({ checked: true }); });
+  node('#start-review').click();
+  for (let i = 0; i < 5; i++) node('#next-step').click();
+  assert.equal(node('#step-percent').textContent, '100%');
+  assert.equal(node('#review').hidden, true);
+  assert.equal(node('#result').hidden, false);
+  assert.match(node('#answer-summary').innerHTML, /Income and family protection/);
+  assert.match(node('#result-copy').textContent, /do not determine approval or price/);
+  assert.equal(stored.size, 0);
+  node('#next-step').click();
+  assert.equal(node('#result').hidden, false);
+});
+
+test('review scrolling respects reduced motion', () => {
+  for (const reducedMotion of [true, false]) {
+    const { node } = setup({ reducedMotion });
+    node('#start-review').click();
+    assert.equal(node('#review').scrollOptions.behavior, reducedMotion ? 'auto' : 'smooth');
+  }
+});
+
+test('fresh page loads reset questionnaire progress and never restore saved answers', () => {
+  const previous = setup();
+  runInContext('finishReview()', previous.context);
+  const fresh = setup();
+  assert.equal(fresh.node('#result').hidden, true);
+  assert.equal(fresh.node('#review').hidden, true);
+  assert.equal(fresh.node('#step-label').textContent, 'Step 1 of 5');
+  assert.equal(fresh.stored.size, 0);
 });

@@ -46,7 +46,11 @@ const funnelIds = [...funnelHtml.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
 assert.equal(new Set(funnelIds).size, funnelIds.length, 'Duplicate funnel HTML id');
 const funnelAnchors = [...funnelHtml.matchAll(/href="#([^"]+)"/g)].map(m => m[1]);
 funnelAnchors.forEach(id => assert(funnelIds.includes(id), `Missing funnel target: ${id}`));
-assert(funnelHtml.includes('id="watch"') && funnelHtml.includes('data-review-cta'), 'Family-focused CTAs must keep the video-first flow');
+assert(!/<video\b|href="#watch"|data-video-src|id="unlock-status"/.test(funnelHtml), 'No unfinished video or watch gate');
+assert((funnelHtml.match(/data-booking-cta/g) || []).length >= 4, 'Direct booking must be repeated through the funnel');
+assert(funnelHtml.includes('Veteran with Benefits') && html.includes('Veteran with Benefits'), 'Correct company name required');
+assert(!/Benefits with Veterans/.test(html + funnelHtml), 'Outdated company name');
+assert(funnelHtml.includes('https://calendly.com/privacy'), 'Funnel booking privacy disclosure required');
 assert(funnelHtml.includes('An illustrative situation') && funnelHtml.includes('Not clients or endorsers'), 'Family examples must not imply testimonials');
 const funnelAssets = [...funnelHtml.matchAll(/(?:src|href)="([^"#]+)"/g)].map(m => m[1]).filter(v => !/^(https?:|data:|mailto:|tel:)/.test(v));
 funnelAssets.filter(asset => asset !== '/').forEach(asset => {
@@ -56,8 +60,7 @@ funnelAssets.filter(asset => asset !== '/').forEach(asset => {
 assert(funnelHtml.includes('not affiliated with or endorsed by'), 'Missing funnel VA affiliation disclosure');
 assert(funnelHtml.includes('NPN 22327730') && funnelHtml.includes('(718) 308-6929'), 'Missing funnel identity');
 assert(!/guaranteed approval|VA[- ]discount|offer expires|limited time|access to every carrier|licensed with every carrier/i.test(funnelHtml), 'Misleading funnel claim');
-assert(funnelHtml.includes('data-video-src=""'), 'Funnel video placeholder/config hook missing');
-assert(funnelJs.includes("video.addEventListener('ended'"), 'Video completion must unlock the review');
+assert(!/sessionStorage|localStorage|fetch\(/.test(funnelJs), 'Questionnaire answers must stay in page memory');
 assert(funnelJs.includes('utm_campaign'), 'Campaign attribution handoff missing');
 const manifest = JSON.parse(readFileSync(resolve(root, '.openai/hosting.json'), 'utf8'));
 assert.equal(manifest.static.directory, 'dist');
