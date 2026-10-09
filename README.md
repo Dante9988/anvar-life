@@ -1,100 +1,51 @@
-# Anvar Life
+# Benefits with Veterans
 
-Personal insurance marketing website for Anvar Baltakhojayev.
+Review-only redesign for Anvar Baltakhojayev, NPN 22327730. Lightweight static website with two clear paths: online life insurance rate checking through the exact Ethos partner URL, and a free consultation through Google Calendar.
 
-The dedicated veteran ad funnel is available at `/veterans/`. Booking is available immediately through the verified Calendly event, with an optional local-only questionnaire to prepare for the call. No video or preview flag is required.
+## Approval and production safety
 
-The funnel uses a family-income message, coral-red emphasis, and concrete planning needs (home, everyday expenses, and financial breathing room). Its family example and photo are explicitly illustrative, not testimonials. Repeated booking CTAs go directly to Calendly, including when JavaScript is unavailable. Questionnaire answers remain in memory, reset on reload, and are never added to booking links or saved in browser storage. There are no countdowns, fabricated deadlines, or approval promises. Google Ads' clickbait policy prohibits using death or severe distress to pressure immediate action; review both ad creative and destination with agency/carrier compliance before launch.
+**Do not merge or deploy to production until the owner explicitly approves and required carrier marketing approval is obtained.** This draft's build script deliberately rejects `VERCEL_ENV=production` and `VERCEL_TARGET_ENV=production`. Remove that limited guard in a reviewed release change only after approval. No production domain, Vercel account setting, existing Sites project identity, or production branch is changed by this PR.
 
-- Review site: https://anvar-life-retirement.anvarxadja.chatgpt.site
-- Booking: https://calendly.com/anvar-life/15min
-- Source: https://github.com/Dante9988/anvar-life
+- Rate checking: https://app.ethoslife.com/partner/780a6/q/goals
+- Booking: https://calendar.app.google/PF12N8i49QaFAV7o9
+- Intended canonical domain: https://www.benefitswithveterans.com/
+- Business email: anvar@benefitswithveterans.com
 
-The hosted review is private. Repository visibility is independent of website access.
+The domain and mailbox are business details supplied by the owner. Their inclusion does not establish that DNS, website hosting, or email delivery is operational. Inbound email must be verified separately before launch.
 
 ## Experience
 
-A responsive dark-first design with an optional light theme, gentle ambient motion, a global pause control, and support for device reduced-motion preferences. Every booking button opens the same Calendly event.
+- Homepage and `/veterans/` both use the new identity, large legible type, high-contrast CTAs, and consistent conversion destinations.
+- No JS is required for navigation, CTAs or native FAQ disclosure controls.
+- Senior/final-expense section is distinct from family-protection messaging and avoids large-benefit or price promises.
+- Whole-life, IUL and annuity education remains available. IUL limitations cover caps/participation, charges, lapse, and policy loans.
+- No lead forms, health/SSN fields, iframes, tracking scripts, analytics, fonts from third parties, or fake quote calculators.
+- Links navigate in the same tab and browser Back remains available. No artificial urgency or fabricated testimonials.
+- Mobile quick actions have reserved footer space and safe-area padding.
+- Old active Calendly links and old interactive funnel scripts have been removed.
+- Original teaching math module and its unit tests remain as reference, but are not loaded by the new pages.
 
-The interactive **Clarity Studio** has three educational experiences:
+## Local review
 
-1. A simple life-insurance gap example subtracts existing coverage and earmarked savings from entered responsibilities. A zero gap is not a recommendation to reduce coverage.
-2. An IUL lesson compares three hypothetical index periods under invented 8% cap / 0% floor / 100% participation assumptions. Results are interest credits before charges, not cash-value projections or offered rates.
-3. A deferred income annuity journey explains funding, the period before income begins, and contractual payment options.
+Node 22+ is supported. There are no install dependencies.
 
-Inputs stay in memory and reset on reload. Only display preferences may be stored on the visitor’s device. There are no analytics, application forms, payment collection, or AI-generated product recommendations.
-
-## Files
-
-| File | Purpose |
-| --- | --- |
-| dist/index.html | Content, contact details, Calendly links, semantic page structure |
-| dist/styles.css | Design, themes, responsive layouts, motion controls |
-| dist/site.js | Navigation and interactive behavior |
-| dist/experience.mjs | Teaching arithmetic and annuity lesson content |
-| dist/family.jpg | Illustrative stock photo |
-| dist/anvar-portrait.jpeg | Approved portrait of Anvar |
-| dist/favicon.svg | Site monogram |
-| dist/robots.txt | Search crawler permissions and sitemap location |
-| dist/sitemap.xml | Canonical public URL for search discovery |
-| scripts/validate.mjs | Static integrity and accessibility-hook checks |
-| scripts/experience.test.mjs | Boundary and scenario checks for teaching models |
-| .openai/hosting.json | Existing Sites project identity and static-output path |
-| vercel.json | Vercel output path and security headers |
-| scripts/prepare-deployment.mjs | Rewrites canonical SEO URLs for the deployment domain |
-
-## Local use
-
-No dependencies or compilation are required. Use Node 22 or newer for the checks.
-
-~~~sh
-npm run check
+```sh
+npm run build
 python3 -m http.server 8080 --directory dist
-~~~
+```
 
-Open the local server in your own browser. Other static hosts can serve the dist directory directly. The hosted Sites version uses .openai/hosting.json; preserve its project identity when updating that existing site.
+`npm run check` checks static content, exact referral/booking links, safety/SEO/accessibility hooks, product limitations and deployment guard behavior, plus the preserved educational math tests. No separate lint or typecheck is configured for this static HTML/CSS project.
 
-## Vercel deployment
+Vercel uses `dist`, `npm run build`, clean URLs and the existing security headers. Preview builds set `noindex,nofollow` and disallow crawling. Canonical, Open Graph and sitemap URLs use the intended business domain; `SITE_URL` accepts a clean HTTPS origin. A preview URL does not mean the business domain is live.
 
-Import `Dante9988/anvar-life` into Vercel. The repository includes its build command and `dist` output directory. The build reads Vercel’s `VERCEL_PROJECT_PRODUCTION_URL` system value and rewrites the canonical URL, Open Graph URL, JSON-LD, robots file, and sitemap to that production domain. If using a custom domain, add a Production environment variable named `SITE_URL` with the full HTTPS origin, such as `https://example.com`, and redeploy.
+## Marketing review required
 
-The site makes no browser API requests and therefore does not need CORS response headers. Adding `Access-Control-Allow-Origin: *` would broaden access without solving a current problem. The Content Security Policy permits the site’s own assets and the two Google Fonts origins it actually uses. Update the policy deliberately if a form, analytics tool, API, or embedded scheduler is added later.
+Ethos's official agent guidelines require prior review/approval of marketing referencing Ethos and specific insured/policy details for sample premiums: https://www.ethos.com/agents/legal/
 
-After the first production deployment, verify that the public domain is the one shown in the page canonical tag and `sitemap.xml`. Connect that production URL to Google Search Console rather than a preview deployment URL.
+No $25/month, $1M-for-$25, pre-approved, guaranteed-approval, no-medical-exam or specific senior benefit claim is published in this draft. The owner's premium claim remains unsubstantiated for advertising purposes. The partner flow's first screen offers a funeral-expense goal, but this does not verify any person's eligibility, age limits, final rates or product suitability. The site describes exploration only and discloses waiting periods/graded benefits and state/product variations.
 
-## Portrait
+Before release: obtain owner design approval, Ethos/carrier approval, verify licensing/appointments and required state disclosures, confirm domain setup and email receipt, and recheck the partner and booking flows on desktop and mobile without submitting an application or appointment.
 
-The approved portrait is displayed in the Meet Anvar section and as a circular brand portrait in the header and footer. Keep the square source image so responsive crops remain predictable, and preserve meaningful alternative text when replacing the main portrait.
+## Images
 
-## Content maintenance
-
-- Confirm legal/agency identity, required state license disclosures, applicable licensing, training, carrier appointments, and advertising approval before public launch.
-- Document any approval, discount, customer-count, or geographic claim before adding it. No verified VA discount program has been identified in this version; do not imply VA affiliation from a veteran-focused carrier offer.
-- The $15,000 final-expense scenario is hypothetical. It is not an average cost estimate, verified testimonial, or immediate-payment promise.
-- Interactive numbers are teaching examples. They do not replace needs analysis, underwriting, carrier illustrations, or contract review.
-- Keep required product limitations close to each example.
-- Confirm the Calendly location, availability, time zone, and reminders in the owner’s account. Tests do not create real appointments.
-- Keep the canonical URL, sitemap, robots file, Open Graph URL, and JSON-LD URLs synchronized if the domain changes.
-- Verify the public URL in Google Search Console, submit sitemap.xml, and request indexing after launch. Indexing and ranking remain Google’s decision.
-- Review privacy language if forms, analytics, embeds, or integrations are added.
-
-## Research and attribution
-
-Design decisions emphasize readable text and user-controlled motion. Dark mode is an aesthetic choice, not a claim of superior conversion or accessibility for every person.
-
-- W3C motion controls: https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html
-- W3C interaction animation: https://www.w3.org/WAI/WCAG21/Understanding/animation-from-interactions
-- NN/g dark-mode research review: https://www.nngroup.com/articles/dark-mode/
-- NAIC life insurance: https://content.naic.org/consumer/life-insurance.htm
-- NAIC illustrations: https://content.naic.org/insurance-topics/life-insurance-illustrations
-- Investor.gov annuities: https://www.investor.gov/introduction-investing/investing-basics/investment-products/annuities
-- National Life Group crediting explanation: https://www.nationallife.com/resource-center/indexed-life-insurance-upside-potential-and-downside-protection
-- VA affiliation information: https://www.benefits.va.gov/INSURANCE/scamcalls.asp
-
-The National Life Group reference informs general mechanics; this site does not represent an offer of that company’s products.
-
-Family photo: RDNE Stock project / Pexels, photo 6149192.
-Source: https://www.pexels.com/photo/family-of-different-ages-hugging-6149192/
-License: https://www.pexels.com/license/
-
-Photo subjects are illustrative, not identified as clients, veterans, or endorsers. External Google Fonts have system-font fallbacks.
+Anvar portrait is the existing approved repository asset. Family photo is illustrative, not a customer or veteran endorsement. Original attribution: RDNE Stock project / Pexels, photo 6149192, https://www.pexels.com/photo/family-of-different-ages-hugging-6149192/ ; license https://www.pexels.com/license/ .
