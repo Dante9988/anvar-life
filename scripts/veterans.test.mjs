@@ -47,7 +47,7 @@ test('production environment build succeeds without changing release authorizati
 test('isolated preview build disables indexing and preserves canonical business domain',()=>{
  const temp=mkdtempSync(join(tmpdir(),'bwv-preview-'));
  try{cpSync(resolve(root,'dist'),join(temp,'dist'),{recursive:true});cpSync(resolve(root,'scripts'),join(temp,'scripts'),{recursive:true});
- const result=spawnSync(process.execPath,['scripts/prepare-deployment.mjs'],{cwd:temp,env:{...process.env,VERCEL_ENV:'preview'},encoding:'utf8'});
+ const result=spawnSync(process.execPath,['scripts/prepare-deployment.mjs'],{cwd:temp,env:{...process.env,SITE_URL:'https://www.benefitswithveterans.com',VERCEL_ENV:'preview',VERCEL_TARGET_ENV:'preview'},encoding:'utf8'});
  assert.equal(result.status,0,result.stderr);
  assert.match(readFileSync(join(temp,'dist/index.html'),'utf8'),/content="noindex,nofollow"/);
  assert.match(readFileSync(join(temp,'dist/index.html'),'utf8'),/rel="canonical" href="https:\/\/www.benefitswithveterans.com\/"/);
@@ -102,4 +102,17 @@ test('repeated builds replace all SEO origins and reset preview indexing when en
    assert(!html.includes('https://second.example'));
   }
  }finally{rmSync(temp,{recursive:true,force:true});}
+});
+
+test('full production build accepts a configured alternate canonical origin', {skip:process.env.BWV_NESTED_BUILD_TEST==='1'},()=>{
+ const temp=mkdtempSync(join(tmpdir(),'bwv-full-production-'));
+ try {
+  for(const path of ['dist','scripts','package.json','vercel.json']) cpSync(resolve(root,path),join(temp,path),{recursive:true});
+  const result=spawnSync('npm',['run','build'],{cwd:temp,env:{...process.env,SITE_URL:'https://deployment.example',VERCEL_ENV:'production',VERCEL_TARGET_ENV:'production',BWV_NESTED_BUILD_TEST:'1'},encoding:'utf8',timeout:30000});
+  assert.equal(result.status,0,result.stdout+'\n'+result.stderr);
+  const html=readFileSync(join(temp,'dist/index.html'),'utf8');
+  assert.match(html,/rel="canonical" href="https:\/\/deployment.example\/"/);
+  assert.match(html,/content="index,follow"/);
+  assert.equal(readFileSync(join(temp,'dist/robots.txt'),'utf8'),'User-agent: *\nAllow: /\nSitemap: https://deployment.example/sitemap.xml\n');
+ } finally {rmSync(temp,{recursive:true,force:true});}
 });
