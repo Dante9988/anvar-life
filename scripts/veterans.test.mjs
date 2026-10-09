@@ -33,11 +33,16 @@ for(const file of ['dist/index.html','dist/veterans/index.html']){
   assert.doesNotMatch(html,/\$25|\$1[ ,]?000[ ,]?000|pre-approved|guaranteed approval|calendly/i);
  });
 }
-test('production guard blocks both Vercel production environment variables',()=>{
- for(const key of ['VERCEL_ENV','VERCEL_TARGET_ENV']) {
-  const result=spawnSync(process.execPath,['scripts/prepare-deployment.mjs'],{cwd:root,env:{...process.env,[key]:'production'},encoding:'utf8'});
-  assert.notEqual(result.status,0); assert.match(result.stderr,/Production release is on hold/);
- }
+test('production environment build succeeds without changing release authorization',()=>{
+ const temp=mkdtempSync(join(tmpdir(),'bwv-production-build-'));
+ try {
+  cpSync(resolve(root,'dist'),join(temp,'dist'),{recursive:true});cpSync(resolve(root,'scripts'),join(temp,'scripts'),{recursive:true});
+  for(const key of ['VERCEL_ENV','VERCEL_TARGET_ENV']) {
+   const result=spawnSync(process.execPath,['scripts/prepare-deployment.mjs'],{cwd:temp,env:{...process.env,VERCEL_ENV:'',VERCEL_TARGET_ENV:'',[key]:'production'},encoding:'utf8'});
+   assert.equal(result.status,0,result.stderr);
+   assert.match(readFileSync(join(temp,'dist/index.html'),'utf8'),/content="index,follow"/);
+  }
+ } finally {rmSync(temp,{recursive:true,force:true});}
 });
 test('isolated preview build disables indexing and preserves canonical business domain',()=>{
  const temp=mkdtempSync(join(tmpdir(),'bwv-preview-'));
@@ -47,5 +52,54 @@ test('isolated preview build disables indexing and preserves canonical business 
  assert.match(readFileSync(join(temp,'dist/index.html'),'utf8'),/content="noindex,nofollow"/);
  assert.match(readFileSync(join(temp,'dist/index.html'),'utf8'),/rel="canonical" href="https:\/\/www.benefitswithveterans.com\/"/);
  assert.equal(readFileSync(join(temp,'dist/robots.txt'),'utf8'),'User-agent: *\nDisallow: /\n');
+ }finally{rmSync(temp,{recursive:true,force:true});}
+});
+
+test('mobile conversion text stays readable with space reserved for fixed quick actions',()=>{
+ const css=readFileSync(resolve(root,'dist/styles.css'),'utf8');
+ const rules=[...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+ const buttonRules=rules.filter(([,selector])=>/\.button(?:\b|-small)/.test(selector)&&!/\.button>span/.test(selector));
+ for(const [,selector,body] of buttonRules){
+  const size=body.match(/font-size:(\d+)px/);
+  if(size) assert(Number(size[1])>=14,`${selector} must not shrink CTA text below 14px`);
+ }
+ assert.match(css,/\.hero \.actions\{flex-direction:column;align-items:stretch/);
+ assert.match(css,/\.mobile-actions \.button\{font-size:14px;[^}]*min-height:52px/);
+ assert.match(css,/footer\{padding-bottom:calc\(11rem \+ env\(safe-area-inset-bottom\)\)/);
+ assert.match(css,/scroll-margin-bottom:calc\(11rem \+ env\(safe-area-inset-bottom\)\)/);
+});
+
+test('repeated builds replace all SEO origins and reset preview indexing when environment changes',()=>{
+ const temp=mkdtempSync(join(tmpdir(),'bwv-repeat-'));
+ try{
+  cpSync(resolve(root,'dist'),join(temp,'dist'),{recursive:true});
+  cpSync(resolve(root,'scripts'),join(temp,'scripts'),{recursive:true});
+  const build=(origin,environment)=>{
+   const env={...process.env,SITE_URL:origin,VERCEL_ENV:environment,VERCEL_TARGET_ENV:''};
+   const result=spawnSync(process.execPath,['scripts/prepare-deployment.mjs'],{cwd:temp,env,encoding:'utf8'});
+   assert.equal(result.status,0,result.stderr);
+  };
+  build('https://first.example','preview');
+  for(const file of ['dist/index.html','dist/veterans/index.html']) assert.match(readFileSync(join(temp,file),'utf8'),/content="noindex,nofollow"/);
+  build('https://second.example','development');
+  for(const file of ['dist/index.html','dist/veterans/index.html','dist/robots.txt','dist/sitemap.xml']){
+   const content=readFileSync(join(temp,file),'utf8');
+   assert(content.includes('https://second.example'),file);
+   assert(!content.includes('https://first.example'),file);
+   assert(!content.includes('https://www.benefitswithveterans.com'),file);
+   assert.doesNotMatch(content,/noindex|nofollow|Disallow/);
+   if(file.endsWith('.html')){
+    assert.match(content,/<meta name="robots" content="index,follow">/);
+    assert(content.includes(ethos)); assert(content.includes(booking));
+    const schema=JSON.parse(content.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+    assert.equal(schema.url,'https://second.example/');
+   }
+  }
+  build('https://www.benefitswithveterans.com','preview');
+  for(const file of ['dist/index.html','dist/veterans/index.html']){
+   const html=readFileSync(join(temp,file),'utf8');
+   assert.match(html,/content="noindex,nofollow"/);
+   assert(!html.includes('https://second.example'));
+  }
  }finally{rmSync(temp,{recursive:true,force:true});}
 });
