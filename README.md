@@ -42,7 +42,7 @@ Vercel uses `dist`, `npm run build`, clean URLs and the existing security header
 
 Ethos's official agent guidelines require prior review/approval of marketing referencing Ethos and specific insured/policy details for sample premiums: https://www.ethos.com/agents/legal/
 
-No $25/month, $1M-for-$25, pre-approved, guaranteed-approval, no-medical-exam or specific senior benefit claim is published in this draft. The owner's premium claim remains unsubstantiated for advertising purposes. The partner flow's first screen offers a funeral-expense goal, but this does not verify any person's eligibility, age limits, final rates or product suitability. The site describes exploration only and discloses waiting periods/graded benefits and state/product variations.
+A user-requested budget guide lists $25–$50, $50–$100, $100–$200 and $200+ strictly as planning amounts to discuss, with an adjacent statement that these are not insurance quotes. No $25/month policy offer, $1M-for-$25, pre-approved, guaranteed-approval, no-medical-exam or specific senior benefit claim is published in this draft. The owner's premium claim remains unsubstantiated for advertising purposes. The partner flow's first screen offers a funeral-expense goal, but this does not verify any person's eligibility, age limits, final rates or product suitability. The site describes exploration only and discloses waiting periods/graded benefits and state/product variations.
 
 Before release: obtain owner design approval, Ethos/carrier approval, verify licensing/appointments and required state disclosures, confirm domain setup and email receipt, and recheck the partner and booking flows on desktop and mobile without submitting an application or appointment.
 

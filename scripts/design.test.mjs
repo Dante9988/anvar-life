@@ -30,3 +30,14 @@ test('mobile image plus typography budget stays smaller than original family ima
 test('portrait dimensions follow its responsive editorial crop instead of a fixed HTML height',()=>{
  assert.match(css,/\.portrait-wrap img\{[^}]*width:100%;height:auto;aspect-ratio:1\/1\.13/);
 });
+
+test('budget amounts are clearly labeled planning prompts, not quoted policy prices',()=>{
+ for(const file of ['dist/index.html','dist/veterans/index.html']){
+  const html=read(file);
+  assert.match(html,/What monthly budget would feel comfortable\?/);
+  assert.match(html,/Planning budgets, not insurance quotes\. Your available coverage and actual premium depend on your application and the policy offered\./);
+  for(const amount of ['$25–$50','$50–$100','$100–$200','$200+']) assert(html.includes(amount));
+  assert.equal((html.match(/\$25/g)||[]).length,1);
+  assert.doesNotMatch(html,/<button|<select|<input|data-budget|[?&]budget=/);
+ }
+});

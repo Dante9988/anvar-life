@@ -31,13 +31,17 @@ This comparison describes implementation; it is not a substitute for the outstan
 
 - Exact Ethos attribution and Google Calendar destinations remain on both routes.
 - NPN, email, independence/VA disclosure, privacy, eligibility/state limits, graded-benefit warning and IUL caveats remain.
-- No application forms, tracking, embeds, new price claims, or additional client JavaScript.
+- No application forms, tracking, embeds, quoted policy-price claims, or additional client JavaScript. The owner later requested visible pricing guidance: a compact $25–$50 / $50–$100 / $100–$200 / $200+ planning-budget guide was added, explicitly labeled as budgets rather than insurance quotes; it does not calculate, prefill or promise premiums.
 - Preview noindex, canonical URLs and existing security headers preserved. The production-only throw is removed as requested; both production environment variables are tested for successful builds.
 - The previously unmerged repeated-build SEO correction is integrated: origins normalize on subsequent builds and preview indexing resets when environments change.
-- `npm run build` and `npm run check` pass, including static validator and 20 tests.
+- `npm run build` and `npm run check` pass, including static validator and 21 tests.
 - Added automated checks cover self-hosted assets, core color contrast, responsive media markup and asset budgets. These are targeted checks, not a WCAG certification or runtime performance measurement.
 - Independent source review confirmed the complete original link destination multiset and all legal/privacy/product caveats remain. It also identified and corrected responsive portrait sizing and strengthened photo-caption contrast.
 - Both 390px mobile, 768px tablet and 1440px desktop layouts are explicitly implemented. Manual layout, zoom, keyboard, overflow and below-the-fold inspection remain required.
+
+## Latest owner direction
+
+After implementation, the owner explicitly requested creating and merging the GitHub PR without Vercel login. They also requested a pricing element. The budget guide responds without inventing available premiums. Original rate-claim evidence remains unresolved: a historical official Ethos $1M-from-$23 advertisement does not establish the requested $25 claim or current eligibility. Marketing approval is not established by these instructions.
 
 ## Outstanding visual review
 

@@ -30,7 +30,7 @@ for(const file of ['dist/index.html','dist/veterans/index.html']){
   assert.match(html,/not a guarantee of coverage or final pricing/);
   assert.match(html,/graded or modified benefits/);
   assert.match(html,/0% index-crediting floor does not prevent policy charges/);
-  assert.doesNotMatch(html,/\$25|\$1[ ,]?000[ ,]?000|pre-approved|guaranteed approval|calendly/i);
+  assert.doesNotMatch(html,/\$1[ ,]?000[ ,]?000|pre-approved|guaranteed approval|calendly/i);
  });
 }
 test('production environment build succeeds without changing release authorization',()=>{
