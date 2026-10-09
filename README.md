@@ -4,7 +4,7 @@ Review-only redesign for Anvar Baltakhojayev, NPN 22327730. Lightweight static w
 
 ## Approval and production safety
 
-**Do not merge or deploy to production until the owner explicitly approves and required carrier marketing approval is obtained.** This draft's build script deliberately rejects `VERCEL_ENV=production` and `VERCEL_TARGET_ENV=production`. Remove that limited guard in a reviewed release change only after approval. No production domain, Vercel account setting, existing Sites project identity, or production branch is changed by this PR.
+**Do not merge or deploy to production until the owner explicitly approves and required carrier marketing approval is obtained.** At the owner's explicit Phase 2 request, production builds no longer throw an environment-specific error. This removes a build-time restriction only; it does not authorize a merge or production deployment. No production domain, Vercel account setting, existing Sites project identity, or production branch is changed by this PR.
 
 - Rate checking: https://app.ethoslife.com/partner/780a6/q/goals
 - Booking: https://calendar.app.google/PF12N8i49QaFAV7o9
@@ -34,7 +34,7 @@ npm run build
 python3 -m http.server 8080 --directory dist
 ```
 
-`npm run check` checks static content, exact referral/booking links, safety/SEO/accessibility hooks, product limitations and deployment guard behavior, plus the preserved educational math tests. No separate lint or typecheck is configured for this static HTML/CSS project.
+`npm run check` checks static content, exact referral/booking links, safety/SEO/accessibility hooks, product limitations and preview/production build behavior, plus the preserved educational math tests. No separate lint or typecheck is configured for this static HTML/CSS project.
 
 Vercel uses `dist`, `npm run build`, clean URLs and the existing security headers. Preview builds set `noindex,nofollow` and disallow crawling. Canonical, Open Graph and sitemap URLs use the intended business domain; `SITE_URL` accepts a clean HTTPS origin. A preview URL does not mean the business domain is live.
 
@@ -42,10 +42,16 @@ Vercel uses `dist`, `npm run build`, clean URLs and the existing security header
 
 Ethos's official agent guidelines require prior review/approval of marketing referencing Ethos and specific insured/policy details for sample premiums: https://www.ethos.com/agents/legal/
 
-No $25/month, $1M-for-$25, pre-approved, guaranteed-approval, no-medical-exam or specific senior benefit claim is published in this draft. The owner's premium claim remains unsubstantiated for advertising purposes. The partner flow's first screen offers a funeral-expense goal, but this does not verify any person's eligibility, age limits, final rates or product suitability. The site describes exploration only and discloses waiting periods/graded benefits and state/product variations.
+A user-requested budget guide lists $25–$50, $50–$100, $100–$200 and $200+ strictly as planning amounts to discuss, with an adjacent statement that these are not insurance quotes. No $25/month policy offer, $1M-for-$25, pre-approved, guaranteed-approval, no-medical-exam or specific senior benefit claim is published in this draft. The owner's premium claim remains unsubstantiated for advertising purposes. The partner flow's first screen offers a funeral-expense goal, but this does not verify any person's eligibility, age limits, final rates or product suitability. The site describes exploration only and discloses waiting periods/graded benefits and state/product variations.
 
 Before release: obtain owner design approval, Ethos/carrier approval, verify licensing/appointments and required state disclosures, confirm domain setup and email receipt, and recheck the partner and booking flows on desktop and mobile without submitting an application or appointment.
 
 ## Images
 
 Anvar portrait is the existing approved repository asset. Family photo is illustrative, not a customer or veteran endorsement. Original attribution: RDNE Stock project / Pexels, photo 6149192, https://www.pexels.com/photo/family-of-different-ages-hugging-6149192/ ; license https://www.pexels.com/license/ .
+
+## Phase 2 visual review
+
+The new navy/ivory editorial design, original V identity, self-hosted Newsreader/Manrope typography and responsive photography are documented in [the Phase 2 design review](docs/phase2-design-review.md). The design branch starts from merged functionality PR #1. See that document for before/after decisions, tests and the outstanding visual-review checklist. Passing static checks does not establish browser accessibility or measured performance.
+
+Font sources: [Newsreader](https://github.com/google/fonts/tree/main/ofl/newsreader) and [Manrope](https://github.com/google/fonts/tree/main/ofl/manrope), SIL Open Font License. Subset/instance licenses are included in `dist/fonts/`. Photography attribution and rights remain as above.

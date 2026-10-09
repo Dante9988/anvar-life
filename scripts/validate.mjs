@@ -11,7 +11,7 @@ for (const file of ['dist/index.html','dist/veterans/index.html']) {
  assert.match(html,/rel="canonical" href="https:\/\//);
  assert.match(html,/NPN 22327730/);
  assert.match(html,/anvar@benefitswithveterans\.com/);
- assert.doesNotMatch(html,/calendly|xadja35|<iframe|<form|<input|\$25|pre-approved/i);
+ assert.doesNotMatch(html,/calendly|xadja35|<iframe|<form|<input|pre-approved/i);
  const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
  assert.equal(new Set(ids).size,ids.length,'Duplicate IDs');
  for (const m of html.matchAll(/href="#([^"]+)"/g)) assert(ids.includes(m[1]),`Missing anchor ${m[1]}`);
