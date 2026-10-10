@@ -89,8 +89,8 @@ export default async function handler(req, res) {
       return await finishLogin(req, res, c, url);
     if (path === "/api/auth/logout" && method === "POST") {
       csrf(req, c);
-      await logout(req, res, c);
-      return json(res, 200, { signedOut: true });
+      const result = await logout(req, res, c);
+      return json(res, 200, result);
     }
     if (!path.startsWith("/api/admin/"))
       throw new HttpError(404, "NOT_FOUND", "Endpoint not found.");

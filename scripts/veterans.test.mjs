@@ -29,7 +29,8 @@ for(const file of ['dist/index.html','dist/veterans/index.html']){
   assert.doesNotMatch(html,/<script[^>]+src=|onclick=|target="_blank"/);
  });
  test(`${file}: product limitations and independence stay visible`,()=>{
-  assert.match(html,/not affiliated with or endorsed by/);
+  assert(html.includes('Benefits with Veterans is a private insurance business, not a government agency. Not affiliated with or endorsed by the U.S. Department of Veterans Affairs or any government agency.'));
+  assert.doesNotMatch(html,/independent insurance agency|\"@type\": \"InsuranceAgency\"/);
   assert.match(html,/not a guarantee of coverage or final pricing/);
   assert.match(html,/graded or modified benefits/);
   assert.match(html,/0% index-crediting floor does not prevent policy charges/);

@@ -16,7 +16,7 @@ Use a new isolated, nonproduction Supabase project and a Vercel preview-only env
 
 Authentication must be invite-only and membership-based. Google OAuth redirect destinations must be explicitly allowlisted. Database migrations need an administrative setup connection; public ingestion must use its own narrowly privileged database role. Authenticated lead operations must retain the user's database identity and RLS protection. A broad service-role connection is not an acceptable replacement for isolation.
 
-Notifications remain disabled until the provider, verified sender, audience and approved minimal content are configured. Invites can be recorded without sending mail; the UI must disclose that delivery did not occur. Public collection remains disabled until privacy, consent, retention and security review are complete.
+External notifications remain disabled until the provider, verified sender, audience and approved minimal content are configured. A bounded fictional-memory-sink dispatcher exercises real database leases, recipient authorization rechecks, DNC suppression, idempotency and retry limits; it records simulated delivery, never sent email. Invites can be recorded without sending mail; the UI must disclose that delivery did not occur. Public collection remains disabled until privacy, consent, retention and security review are complete.
 
 ## Marketing claim gate
 
@@ -32,5 +32,9 @@ Candidate evidence: https://www.ethos.com/life/calculator/ and https://www.ethos
 - Concurrent submissions, duplicate retries, rate limiting, consent versions and assignment conflicts are tested.
 - Agent identity, state licensing, carrier/product appointments, expiry and ownership conditions are verified before assignment. Missing evidence keeps assignment blocked.
 - Agency contact email receipt is independently verified. The existing Google Calendar URL identifies one person's calendar, not a shared agency schedule.
-- Privacy/consent/retention text and carrier marketing approval are reviewed; no live customer collection occurs during testing.
+- Privacy/consent/retention text, business entity/DBA and required agency licensing, IMO marketing approval and carrier marketing approval are reviewed; no live customer collection occurs during testing. Public branding does not establish an independently licensed entity or direct carrier contract.
 - Separate explicit authorization is required to merge or deploy production. This work does not change DNS, production environments or paid services.
+
+## Preview access
+
+The Vercel branch preview is protected by Vercel authentication. A Ready deployment status does not imply public or authenticated application access. Protection remains enabled. CI browser artifacts are local-test renders; fictional questionnaire/dashboard transport fixtures are clearly separate from hosted end-to-end verification.

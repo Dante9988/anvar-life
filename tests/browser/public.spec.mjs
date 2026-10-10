@@ -48,6 +48,7 @@ test("public pages retain premium identity, exact referral, privacy and mobile l
       ),
     ).toBe(true);
   }
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({
     path: info.outputPath("public-premium.png"),
     fullPage: true,
@@ -62,6 +63,7 @@ test("unconfigured API hides intake and never claims a save", async ({
   );
   await expect(page.locator("#coverage-form")).toBeHidden();
   await expect(page.locator("#intake-confirmation")).toBeHidden();
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({
     path: info.outputPath("intake-unconfigured.png"),
     fullPage: true,
@@ -95,6 +97,7 @@ test("questionnaire UI with a stubbed transport validates, navigates back and sa
   await expect(page.getByLabel("First name", { exact: true })).toHaveValue(
     "Fictional",
   );
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({
     path: info.outputPath("questionnaire-fictional-contact-ui.png"),
     fullPage: true,
@@ -139,6 +142,7 @@ test("private dashboard starts behind authentication and does not fabricate lead
   await expect(page.locator("body")).toContainText(
     /sign in|not configured|unavailable/i,
   );
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({
     path: info.outputPath("admin-authentication-gate.png"),
     fullPage: true,

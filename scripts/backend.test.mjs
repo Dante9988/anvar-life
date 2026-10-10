@@ -157,7 +157,7 @@ test("unconfigured API is explicit no-store and never simulates successful write
   }
 });
 
-test("logout revokes refresh-only sessions and does not clear on failed revocation", async () => {
+test("logout revokes refresh-only sessions and clears locally with explicit warning on provider failure", async () => {
   const { logout } = await import("../server/auth.mjs");
   const c = {
     secure: true,
@@ -198,13 +198,22 @@ test("logout revokes refresh-only sessions and does not clear on failed revocati
   assert.equal(revokeCalls, 1);
   assert.equal(res.headers["Set-Cookie"].length, 4);
   const failed = response();
-  await assert.rejects(
-    logout({ headers: { cookie: "__Host-agency-access=old" } }, failed, c, {
+  const uncertain = await logout(
+    { headers: { cookie: "__Host-agency-access=old" } },
+    failed,
+    c,
+    {
       revoke: async () => ({ ok: false, status: 500 }),
-    }),
-    (e) => e.status === 503,
+    },
   );
-  assert.equal(failed.headers["Set-Cookie"], undefined);
+  assert.equal(uncertain.localSignedOut, true);
+  assert.equal(uncertain.remoteRevocationConfirmed, false);
+  assert.equal(uncertain.signedOut, undefined);
+  assert.match(uncertain.warning, /could not be confirmed/);
+  assert.equal(failed.headers["Set-Cookie"].length, 4);
+  assert.ok(
+    failed.headers["Set-Cookie"].every((value) => value.includes("Max-Age=0")),
+  );
 });
 test("logout refreshes expired access and retries revocation exactly once", async () => {
   const { logout } = await import("../server/auth.mjs");

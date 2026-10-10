@@ -94,7 +94,8 @@ export function intake(input) {
   const utm = {};
   if (input.utm) {
     only(input.utm, ["source", "medium", "campaign", "term", "content"]);
-    for (const k of Object.keys(input.utm)) utm[k] = str(input.utm[k], 150);
+    for (const k of Object.keys(input.utm).sort())
+      utm[k] = str(input.utm[k], 150);
   }
   return {
     name,

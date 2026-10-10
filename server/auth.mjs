@@ -199,6 +199,7 @@ export async function logout(req, res, c, dependencies = {}) {
         headers: { apikey: c.key, Authorization: `Bearer ${value}` },
         signal: AbortSignal.timeout(5000),
       }));
+  let remoteRevocationConfirmed = true;
   try {
     let response = token ? await revoke(token) : null;
     if ((!token || response?.status === 401) && refresh) {
@@ -211,12 +212,18 @@ export async function logout(req, res, c, dependencies = {}) {
     if ((token || refresh) && !response?.ok)
       throw new Error("Revocation failed");
   } catch {
-    throw new HttpError(
-      503,
-      "AUTH_UNAVAILABLE",
-      "Session revocation is unavailable. Please try again.",
-    );
+    remoteRevocationConfirmed = false;
   }
   for (const key of ["access", "refresh", "csrf", "pkce"])
     setCookie(res, c, key, "", 0);
+  return {
+    localSignedOut: true,
+    remoteRevocationConfirmed,
+    ...(remoteRevocationConfirmed
+      ? { signedOut: true }
+      : {
+          warning:
+            "You are signed out on this browser. Remote session revocation could not be confirmed; a previously copied session token may remain valid.",
+        }),
+  };
 }

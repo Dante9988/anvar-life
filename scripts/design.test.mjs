@@ -59,6 +59,8 @@ test('questionnaire preserves accessible five-step, consent and privacy contract
  assert.doesNotMatch(html,/<input[^>]*name="marketingConsent"[^>]*checked/);
  for(const range of ['18-39','40-59','60-70','71-85','86+']) assert(html.includes(`value="${range}"`));
  assert.match(html,/id="coverage-form" novalidate hidden/);
+ assert(html.includes('Benefits with Veterans is a private insurance business, not a government agency. Not affiliated with or endorsed by the U.S. Department of Veterans Affairs or any government agency.'));
+ assert.doesNotMatch(html,/independent insurance agency/);
  assert.match(html,/Planning budgets, not insurance quotes/);
  assert.match(html,/routing|route your request only/);
  assert.match(js,/Idempotency-Key/);

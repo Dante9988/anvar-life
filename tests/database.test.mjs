@@ -4,6 +4,11 @@ import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
 import pg from "pg";
+import {
+  createPostgresOutboxStore,
+  createMemoryMailSink,
+  dispatchPreviewNotifications,
+} from "../server/notifications.mjs";
 
 const ids = Object.fromEntries(
   [
@@ -79,6 +84,12 @@ test("real PostgreSQL migrations and adversarial role isolation", async (t) => {
     await exec(
       await readFile(
         new URL("../database/001_agency.sql", import.meta.url),
+        "utf8",
+      ),
+    );
+    await exec(
+      await readFile(
+        new URL("../database/002_notification_preview.sql", import.meta.url),
         "utf8",
       ),
     );
@@ -595,6 +606,130 @@ test("real PostgreSQL migrations and adversarial role isolation", async (t) => {
           "body",
         ])
           assert(!columns.includes(forbiddenName));
+      },
+    );
+    await t.test(
+      "real database outbox leases, authorization rechecks, retries and fictional sink",
+      async () => {
+        await query(
+          "UPDATE public.notification_outbox SET status='suppressed'",
+        );
+        const row = async (lead = ids.leadB, attempts = 0) =>
+          (
+            await query(
+              "INSERT INTO public.notification_outbox(agency_id,lead_id,event,attempts) VALUES($1,$2,'assigned',$3) RETURNING id",
+              [ids.agency, lead, attempts],
+            )
+          ).rows[0].id;
+        const store = createPostgresOutboxStore({
+          query: (sql, params) =>
+            user(null, () => query(sql, params), "agency_outbox"),
+        });
+        await forbidden(() =>
+          user(
+            null,
+            () => query("SELECT * FROM public.leads"),
+            "agency_outbox",
+          ),
+        );
+        await forbidden(() =>
+          user(ids.a, () =>
+            query("SELECT public.claim_preview_notifications(1)"),
+          ),
+        );
+        const eventId = await row();
+        const items = await store.claim(1);
+        assert.equal(items.length, 1);
+        assert.equal(items[0].id, eventId);
+        assert.deepEqual(await store.claim(1), []);
+        assert.equal(
+          await store.finish(
+            { ...items[0], leaseToken: randomUUID() },
+            "simulated",
+          ),
+          false,
+        );
+        const recipient = await store.resolve(items[0]);
+        assert.equal(recipient.recipientId, ids.b);
+        assert.equal(Object.hasOwn(recipient, "name"), false);
+        assert.equal(Object.hasOwn(recipient, "phone"), false);
+        await query(
+          "UPDATE public.memberships SET status='disabled' WHERE user_id=$1",
+          [ids.b],
+        );
+        assert.equal(await store.resolve(items[0]), null);
+        await query(
+          "UPDATE public.memberships SET status='active' WHERE user_id=$1",
+          [ids.b],
+        );
+        assert.equal(await store.finish(items[0], "retry"), true);
+        assert.deepEqual(await store.claim(1), []);
+        await query(
+          "UPDATE public.notification_outbox SET available_at=now() WHERE id=$1",
+          [eventId],
+        );
+        const sink = createMemoryMailSink();
+        const result = await dispatchPreviewNotifications({
+          mode: "fictional_preview",
+          enabled: true,
+          origin: "https://fictional.example",
+          store,
+          sink,
+        });
+        assert.equal(result.simulated, 1);
+        assert.equal(sink.messages.size, 1);
+        const message = [...sink.messages.values()][0];
+        assert.equal(message.to, "b@example.invalid");
+        assert(!message.text.includes("Fictional Lead"));
+        assert(!message.text.includes("fictional@example.invalid"));
+        assert.equal(
+          (
+            await query(
+              "SELECT status FROM public.notification_outbox WHERE id=$1",
+              [eventId],
+            )
+          ).rows[0].status,
+          "simulated",
+        );
+        const dncId = await row(ids.leadA);
+        assert.deepEqual(await store.claim(1), []);
+        assert.equal(
+          (
+            await query(
+              "SELECT status FROM public.notification_outbox WHERE id=$1",
+              [dncId],
+            )
+          ).rows[0].status,
+          "suppressed",
+        );
+        const exhaustedId = await row(ids.leadB, 5);
+        assert.deepEqual(await store.claim(1), []);
+        assert.equal(
+          (
+            await query(
+              "SELECT status FROM public.notification_outbox WHERE id=$1",
+              [exhaustedId],
+            )
+          ).rows[0].status,
+          "failed",
+        );
+        await query("UPDATE public.leads SET fictional=false WHERE id=$1", [
+          ids.leadB,
+        ]);
+        const realFlagId = await row(ids.leadB);
+        assert.deepEqual(await store.claim(1), []);
+        assert.equal(
+          (
+            await query(
+              "SELECT status FROM public.notification_outbox WHERE id=$1",
+              [realFlagId],
+            )
+          ).rows[0].status,
+          "pending",
+        );
+        await query("UPDATE public.leads SET fictional=true WHERE id=$1", [
+          ids.leadB,
+        ]);
       },
     );
     await t.test(

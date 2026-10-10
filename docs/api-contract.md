@@ -31,3 +31,8 @@ Statuses also include `application` and `sold`; these must reflect actual user-r
 Metrics also return application/sold/archived, followUpDue, appointmentRequested, and count maps bySource/byCampaign/byAgent. Metrics are recorded lead/workflow totals; no fabricated revenue/ROI or paid-channel claims.
 
 Only an owner may invite another admin. No external invitation email is sent. Existing-carrier/eligibility unknowns fail closed: a newly submitted lead has no verified carrier and cannot be assigned until approved operational verification populates this fact. This version does not provide a UI for verifying licensing or carrier evidence.
+
+## Logout outcome
+POST `/api/auth/logout` clears local access, refresh, CSRF and PKCE cookies. It returns `{localSignedOut:true,remoteRevocationConfirmed:true,signedOut:true}` only when provider revocation succeeded (or no session existed). A provider outage returns `{localSignedOut:true,remoteRevocationConfirmed:false,warning}`; the UI must return to sign-in while preserving the warning that remote revocation could not be confirmed. It must not retain a refresh token for silent retry or claim full revocation.
+
+Fictional notification deep links use `/admin/leads?lead=UUID`; the dashboard resolves them only after authentication through the same RLS-enforced lead detail endpoint.
