@@ -1,57 +1,51 @@
-# Benefits with Veterans
+# Benefits with Veterans: Phase 3
 
-Review-only redesign for Anvar Baltakhojayev, NPN 22327730. Lightweight static website with two clear paths: online life insurance rate checking through the exact Ethos partner URL, and a free consultation through Google Calendar.
+A premium agency website, five-step coverage-request experience and invite-only lead workspace. Static pages retain the merged Phase 2 design. Same-origin Vercel Node endpoints connect to Supabase Auth and persisted PostgreSQL with database-enforced agency and assignment isolation.
 
-## Approval and production safety
+## Review-only release
 
-**Do not merge or deploy to production until the owner explicitly approves and required carrier marketing approval is obtained.** At the owner's explicit Phase 2 request, production builds no longer throw an environment-specific error. This removes a build-time restriction only; it does not authorize a merge or production deployment. No production domain, Vercel account setting, existing Sites project identity, or production branch is changed by this PR.
+This is a feature-branch implementation, not authorization to merge or deploy production. No DNS, production configuration, paid infrastructure or real customer collection is changed. Missing backend configuration fails closed: no browser-storage database, demo password, fake login or fabricated successful submissions.
 
-- Rate checking: https://app.ethoslife.com/partner/780a6/q/goals
-- Booking: https://calendar.app.google/PF12N8i49QaFAV7o9
-- Intended canonical domain: https://www.benefitswithveterans.com/
-- Business email: anvar@benefitswithveterans.com
+- Public routes: `/`, `/veterans/`, `/find-coverage/`
+- Private workspace: `/admin/leads/`
+- Agency contact: `info@benefitswithveterans.com` (mailbox delivery requires separate verification)
+- Exact Ethos partner destination: https://app.ethoslife.com/partner/780a6/q/goals
+- Anvar's individual calendar, never an agency-wide schedule: https://calendar.app.google/PF12N8i49QaFAV7o9
 
-The domain and mailbox are business details supplied by the owner. Their inclusion does not establish that DNS, website hosting, or email delivery is operational. Inbound email must be verified separately before launch.
+Producer identity and NPN remain in compliance disclosures. Agency marketing replaces the personal portrait/introduction. The unapproved $37/$1 million claim remains unpublished. Product, state, eligibility and VA-independence caveats remain visible.
 
-## Experience
+## Local development
 
-- Homepage and `/veterans/` both use the new identity, large legible type, high-contrast CTAs, and consistent conversion destinations.
-- No JS is required for navigation, CTAs or native FAQ disclosure controls.
-- Senior/final-expense section is distinct from family-protection messaging and avoids large-benefit or price promises.
-- Whole-life, IUL and annuity education remains available. IUL limitations cover caps/participation, charges, lapse, and policy loans.
-- No lead forms, health/SSN fields, iframes, tracking scripts, analytics, fonts from third parties, or fake quote calculators.
-- Links navigate in the same tab and browser Back remains available. No artificial urgency or fabricated testimonials.
-- Mobile quick actions have reserved footer space and safe-area padding.
-- Old active Calendly links and old interactive funnel scripts have been removed.
-- Original teaching math module and its unit tests remain as reference, but are not loaded by the new pages.
-
-## Local review
-
-Node 22+ is supported. There are no install dependencies.
+Node 22 or later:
 
 ```sh
-npm run build
-python3 -m http.server 8080 --directory dist
+npm ci
+npm run check
+npm run dev
 ```
 
-`npm run check` checks static content, exact referral/booking links, safety/SEO/accessibility hooks, product limitations and preview/production build behavior, plus the preserved educational math tests. No separate lint or typecheck is configured for this static HTML/CSS project.
+The local review server listens only on `127.0.0.1:8080`. Without isolated credentials, public intake and private sign-in remain unavailable. Do not put credentials in source, chat, screenshots or `.env.example`.
 
-Vercel uses `dist`, `npm run build`, clean URLs and the existing security headers. Preview builds set `noindex,nofollow` and disallow crawling. Canonical, Open Graph and sitemap URLs use the intended business domain; `SITE_URL` accepts a clean HTTPS origin. A preview URL does not mean the business domain is live.
+```sh
+npm run test:db        # actual PostgreSQL via PGlite, fictional data
+npm run test:e2e       # Playwright; install Chromium first
+npm run build
+```
 
-## Marketing review required
+To exercise conventional PostgreSQL, set `TEST_DATABASE_URL` to a fresh disposable local test database and run `npm run test:db`. The harness creates roles and a synthetic `auth` schema and is not for an existing Supabase or production database. GitHub Actions supplies a fresh PostgreSQL service and runs both database paths. Browser transport stubs verify questionnaire state and error handling only; they do not establish hosted persistence or OAuth integration.
 
-Ethos's official agent guidelines require prior review/approval of marketing referencing Ethos and specific insured/policy details for sample premiums: https://www.ethos.com/agents/legal/
+## Security model
 
-A user-requested budget guide lists $25–$50, $50–$100, $100–$200 and $200+ strictly as planning amounts to discuss, with an adjacent statement that these are not insurance quotes. No $25/month policy offer, $1M-for-$25, pre-approved, guaranteed-approval, no-medical-exam or specific senior benefit claim is published in this draft. The owner's premium claim remains unsubstantiated for advertising purposes. The partner flow's first screen offers a funeral-expense goal, but this does not verify any person's eligibility, age limits, final rates or product suitability. The site describes exploration only and discloses waiting periods/graded benefits and state/product variations.
+- Only invited, verified Google identities can receive active memberships. Matching an email domain does not grant access.
+- Owner/admin visibility is agency-scoped; agents see only assigned leads. Manager permissions default to denied.
+- RLS protects leads and related consent/timeline data. Runtime users cannot directly update ownership or memberships.
+- Public intake uses a separately restricted PostgreSQL role and atomic RPC with idempotency, persistent rate limits, consent receipt and minimal outbox event.
+- Status and assignment changes use authorization-checked database transactions. Missing carrier/state/product/license verification blocks assignment.
+- Secure server-side cookies, PKCE, trusted-origin checks and CSRF protect private mutation endpoints. No private lead payload belongs in client storage, URLs, analytics or notification bodies.
+- Hosted staging is fictional-only. Live notifications and customer collection remain disabled; invitations recorded without sending mail must be completed through approved provisioning.
 
-Before release: obtain owner design approval, Ethos/carrier approval, verify licensing/appointments and required state disclosures, confirm domain setup and email receipt, and recheck the partner and booking flows on desktop and mobile without submitting an application or appointment.
+Read [the API contract](docs/api-contract.md), [release boundaries and gates](docs/phase3-release.md), and the database migration/setup guidance before configuring an isolated preview. Review defaults and provider policies; code tests cannot certify legal compliance.
 
-## Images
+## Design and assets
 
-Anvar portrait is the existing approved repository asset. Family photo is illustrative, not a customer or veteran endorsement. Original attribution: RDNE Stock project / Pexels, photo 6149192, https://www.pexels.com/photo/family-of-different-ages-hugging-6149192/ ; license https://www.pexels.com/license/ .
-
-## Phase 2 visual review
-
-The new navy/ivory editorial design, original V identity, self-hosted Newsreader/Manrope typography and responsive photography are documented in [the Phase 2 design review](docs/phase2-design-review.md). The design branch starts from merged functionality PR #1. See that document for before/after decisions, tests and the outstanding visual-review checklist. Passing static checks does not establish browser accessibility or measured performance.
-
-Font sources: [Newsreader](https://github.com/google/fonts/tree/main/ofl/newsreader) and [Manrope](https://github.com/google/fonts/tree/main/ofl/manrope), SIL Open Font License. Subset/instance licenses are included in `dist/fonts/`. Photography attribution and rights remain as above.
+Self-hosted Newsreader and Manrope fonts (SIL Open Font License), navy/ivory/gold/crimson design tokens, original V marks and responsive family photography retain the Phase 2 identity. The family photo is illustrative, not a customer or veteran endorsement: RDNE Stock project / Pexels photo 6149192, https://www.pexels.com/photo/family-of-different-ages-hugging-6149192/ . Legacy teaching-math tests remain as reference; that module is not a live quote engine.

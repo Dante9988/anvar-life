@@ -1,11 +1,24 @@
 {
   "name": "anvar-life",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node scripts/validate.mjs && node --test scripts/*.test.mjs",
-    "build": "node scripts/prepare-deployment.mjs && npm run check"
+    "check": "node scripts/validate.mjs && node --test scripts/*.test.mjs && npm run test:db",
+    "build": "node scripts/prepare-deployment.mjs && npm run check",
+    "dev": "node scripts/dev-server.mjs",
+    "test:db": "node --test tests/database.test.mjs",
+    "test:e2e": "playwright test"
   },
-  "engines": { "node": ">=22" }
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@playwright/test": "^1.64.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
+    "pg": "^8.23.1"
+  }
 }

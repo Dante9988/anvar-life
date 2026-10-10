@@ -11,7 +11,7 @@ if (url.protocol !== 'https:' || url.username || url.password || url.search || u
 const isPreview = process.env.VERCEL_ENV === 'preview' || process.env.VERCEL_TARGET_ENV === 'preview';
 const robots = isPreview ? 'noindex,nofollow' : 'index,follow';
 // Normalize from each page's current canonical so repeated builds never retain an old origin.
-for (const file of ['dist/index.html', 'dist/veterans/index.html']) {
+for (const file of ['dist/index.html', 'dist/veterans/index.html', 'dist/find-coverage/index.html']) {
   const path = resolve(root, file);
   let content = readFileSync(path, 'utf8');
   const canonical = content.match(/<link rel="canonical" href="([^"]+)">/);
