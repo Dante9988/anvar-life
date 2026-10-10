@@ -12,9 +12,10 @@ test('brand typography and images are self-hosted; marks work on both background
  assert.match(css,/font-display:swap/);assert.match(css,/prefers-reduced-motion:reduce/);
  for(const file of ['dist/index.html','dist/veterans/index.html']){
   const html=read(file);assert.match(html,/family-640.webp 640w/);assert.match(html,/loading="lazy"/);
-  assert.doesNotMatch(html,/fonts.googleapis|fonts.gstatic|<iframe|<script[^>]+src=/);
+  assert.doesNotMatch(html,/fonts.googleapis|fonts.gstatic|<iframe/);
   assert.match(html,/Illustrative photo; not a customer testimonial/);
   assert.match(html,/brand-mark-light.svg/);
+  assert.match(html,/<script type="module" src="\/attribution\.mjs"><\/script>/);
  }
 });
 test('core brand text combinations meet AA normal text contrast',()=>{
@@ -27,8 +28,14 @@ test('mobile image plus typography budget stays smaller than original family ima
  assert(statSync(resolve(root,'dist/anvar-portrait.webp')).size<60417);
 });
 
-test('portrait dimensions follow its responsive editorial crop instead of a fixed HTML height',()=>{
- assert.match(css,/\.portrait-wrap img\{[^}]*width:100%;height:auto;aspect-ratio:1\/1\.13/);
+test('agency identity replaces personal marketing while producer compliance remains',()=>{
+ for(const file of ['dist/index.html','dist/veterans/index.html']){
+  const html=read(file);
+  assert.doesNotMatch(html,/anvar-portrait|Hi, I’m Anvar|Meet Anvar|anvar@benefits/);
+  assert.match(html,/class="agency-panel"/);
+  assert.match(html,/Producer disclosure: Anvar Baltakhojayev · NPN 22327730/);
+  assert.match(html,/info@benefitswithveterans.com/);
+ }
 });
 
 test('budget amounts are clearly labeled planning prompts, not quoted policy prices',()=>{
@@ -40,4 +47,27 @@ test('budget amounts are clearly labeled planning prompts, not quoted policy pri
   assert.equal((html.match(/\$25/g)||[]).length,1);
   assert.doesNotMatch(html,/<button|<select|<input|data-budget|[?&]budget=/);
  }
+});
+
+
+test('questionnaire preserves accessible five-step, consent and privacy contracts',()=>{
+ const html=read('dist/find-coverage/index.html');
+ const js=read('dist/questionnaire.mjs');
+ assert.equal((html.match(/<fieldset data-step=/g)||[]).length,4);
+ assert.match(html,/id="intake-confirmation" hidden/);
+ assert.match(html,/name="contactConsent" required/);
+ assert.match(html,/name="marketingConsent"/);
+ assert.doesNotMatch(html,/<input[^>]*name="marketingConsent"[^>]*checked/);
+ for(const range of ['18-39','40-59','60-70','71-85','86+']) assert(html.includes(`value="${range}"`));
+ assert.match(html,/id="coverage-form" novalidate hidden/);
+ assert(html.includes('Benefits with Veterans is a private insurance business, not a government agency. Not affiliated with or endorsed by the U.S. Department of Veterans Affairs or any government agency.'));
+ assert.doesNotMatch(html,/independent insurance agency/);
+ assert.match(html,/Planning budgets, not insurance quotes/);
+ assert.match(html,/routing|route your request only/);
+ assert.match(js,/Idempotency-Key/);
+ assert.match(js,/data\?\.accepted !== true/);
+ assert.match(js,/receipt/);
+ assert.doesNotMatch(js,/localStorage|sessionStorage|console\./);
+ assert.match(js,/fictional: config.mode === 'fictional_preview' && checked\('fictional'\)/);
+ assert.match(js,/form\.reset\(\)/);
 });
