@@ -40,6 +40,7 @@ To exercise conventional PostgreSQL, set `TEST_DATABASE_URL` to a fresh disposab
 - Owner/admin visibility is agency-scoped; agents see only assigned leads. Manager permissions default to denied.
 - RLS protects leads and related consent/timeline data. Runtime users cannot directly update ownership or memberships.
 - Public intake uses a separately restricted PostgreSQL role and atomic RPC with idempotency, persistent rate limits, consent receipt and minimal outbox event.
+- Campaign attribution is limited to five bounded UTM fields, independently normalized in browser and API. Duplicate tags and likely contact details are discarded; arbitrary queries, raw URLs, referrers and browser storage are not retained.
 - Status and assignment changes use authorization-checked database transactions. Missing carrier/state/product/license verification blocks assignment.
 - Secure server-side cookies, PKCE, trusted-origin checks and CSRF protect private mutation endpoints. No private lead payload belongs in client storage, URLs, analytics or notification bodies.
 - Hosted staging is fictional-only. Live notifications and customer collection remain disabled; invitations recorded without sending mail must be completed through approved provisioning.

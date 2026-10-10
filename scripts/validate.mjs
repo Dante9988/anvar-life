@@ -20,7 +20,7 @@ for (const file of ['dist/index.html','dist/veterans/index.html','dist/find-cove
   assert(existsSync(asset),`Missing asset ${m[1]}`);
  }
  for (const m of html.matchAll(/<img\b[^>]+>/g)) assert(/alt="[^"]*"/.test(m[0]),'Image missing alt');
- for (const m of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)) { if(m[0].includes('application/ld+json')) JSON.parse(m[1]); else assert.match(m[0], /type="module" src="\/questionnaire\.mjs"/); }
+ for (const m of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)) { if(m[0].includes('application/ld+json')) JSON.parse(m[1]); else assert.match(m[0], /type="module" src="\/(?:questionnaire|attribution)\.mjs"/); }
 }
 const config=JSON.parse(readFileSync(resolve(root,'vercel.json')));
 assert.equal(config.outputDirectory,'dist');

@@ -1,18 +1,15 @@
 import { test, expect } from "@playwright/test";
+import { CONSENT } from "../../server/config.mjs";
 
 const config = {
   configured: true,
   mode: "fictional_preview",
   intakeEnabled: true,
-  consent: {
-    version: "2026-10-10.v1",
-    contactText: "Fictional test: contact me about this request.",
-    marketingText: "Fictional test: optional marketing consent.",
-  },
+  consent: CONSENT,
 };
-async function questionnaire(page) {
+async function questionnaire(page, path = "/find-coverage/") {
   await page.route("**/api/config", (route) => route.fulfill({ json: config }));
-  await page.goto("/find-coverage/");
+  await page.goto(path);
   await expect(page.locator("#coverage-form")).toBeVisible();
   await page.getByLabel("Protect my family", { exact: true }).check();
   await page.getByRole("button", { name: "Continue" }).click();
@@ -147,4 +144,45 @@ test("private dashboard starts behind authentication and does not fabricate lead
     path: info.outputPath("admin-authentication-gate.png"),
     fullPage: true,
   });
+});
+
+test("allowlisted campaign attribution survives entry links and fictional submission only", async ({
+  page,
+}) => {
+  await page.goto(
+    "/?utm_source=newsletter&utm_campaign=fall-2026&utm_content=hero&email=someone%40example.com&next=https%3A%2F%2Fevil.example",
+  );
+  const entry = page.locator('a[href^="/find-coverage/"]').first();
+  await expect(entry).toHaveAttribute("href", /utm_source=newsletter/);
+  const target = await entry.getAttribute("href");
+  expect(target).toContain("utm_campaign=fall-2026");
+  expect(target).not.toMatch(/someone|email=|next=|evil/);
+  let submitted;
+  await page.route("**/api/intake", (route) => {
+    submitted = route.request().postDataJSON();
+    return route.fulfill({
+      status: 201,
+      json: {
+        accepted: true,
+        receipt: "00000000-0000-4000-8000-000000000099",
+        appointmentRequested: false,
+      },
+    });
+  });
+  await questionnaire(page, target);
+  await page.getByRole("button", { name: "Send my request" }).click();
+  await expect(page.locator("#confirmation-title")).toHaveText(
+    "Your test request is saved.",
+  );
+  expect(submitted.utm).toEqual({
+    source: "newsletter",
+    campaign: "fall-2026",
+    content: "hero",
+  });
+  await page.goto(
+    "/?utm_source=one&utm_source=two&utm_medium=someone%40example.com&utm_content=2025550123&phone=2025550100",
+  );
+  await expect(
+    page.locator('a[href^="/find-coverage/"]').first(),
+  ).toHaveAttribute("href", "/find-coverage/");
 });

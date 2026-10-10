@@ -1,3 +1,4 @@
+import { normalizeAttribution } from './attribution.mjs';
 // No personal information is stored in browser storage, URLs, analytics or console logs.
 const form = document.querySelector('#coverage-form');
 const sections = [...form.querySelectorAll('fieldset[data-step]')];
@@ -80,6 +81,7 @@ form.addEventListener('submit', async event => {
     intent: checked('appointmentRequested') ? 'appointment' : 'quote',
     consent: { contact: checked('contactConsent'), marketing: checked('marketingConsent'), version: config.consent.version },
     sourcePath: '/find-coverage/', website: value('website'),
+    utm: normalizeAttribution(window.location.search),
     fictional: config.mode === 'fictional_preview' && checked('fictional')
   };
   const serialized = JSON.stringify(payload);

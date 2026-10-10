@@ -2,6 +2,8 @@ import { createHash, createHmac } from "node:crypto";
 import pg from "pg";
 import { HttpError, CONSENT } from "./config.mjs";
 import { intake, UUID } from "./validation.mjs";
+export const INTAKE_ROLE_CHECK_SQL =
+  "select r.rolsuper,r.rolbypassrls,exists(select 1 from pg_class t join pg_namespace n on n.oid=t.relnamespace where n.nspname='public' and t.relkind in ('r','p','v','m','f') and (t.relowner=r.oid or has_table_privilege(current_user,t.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER'))) as can_access_tables from pg_roles r where r.rolname=current_user";
 let pool;
 export function database(c) {
   if (!pool)
@@ -90,14 +92,12 @@ export async function submit(req, c, input) {
     .update(JSON.stringify(payload))
     .digest("hex");
   try {
-    const runtime = await database(c).query(
-      "select r.rolsuper,r.rolbypassrls,has_table_privilege(current_user,'public.leads','SELECT') as can_read from pg_roles r where r.rolname=current_user",
-    );
+    const runtime = await database(c).query(INTAKE_ROLE_CHECK_SQL);
     if (
       !runtime.rows[0] ||
       runtime.rows[0].rolsuper ||
       runtime.rows[0].rolbypassrls ||
-      runtime.rows[0].can_read
+      runtime.rows[0].can_access_tables
     )
       throw new Error("Unsafe intake role");
     const result = await database(c).query(

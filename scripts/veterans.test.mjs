@@ -26,7 +26,7 @@ for(const file of ['dist/index.html','dist/veterans/index.html']){
   for(const text of ['Protect Your Family.','Start with what matters to you.','No obligation to buy. Your next step is your choice.','How Much Could Life Insurance Cost You?','Looking for Final','CHECK MY RATE','People First. Always.']) assert(html.includes(text));
   assert.match(html,/class="mobile-actions" aria-label="Quick actions"/);
   assert.equal((html.match(/<details>/g)||[]).length,5);
-  assert.doesNotMatch(html,/<script[^>]+src=|onclick=|target="_blank"/);
+  assert.doesNotMatch(html,/onclick=|target="_blank"/);
  });
  test(`${file}: product limitations and independence stay visible`,()=>{
   assert(html.includes('Benefits with Veterans is a private insurance business, not a government agency. Not affiliated with or endorsed by the U.S. Department of Veterans Affairs or any government agency.'));

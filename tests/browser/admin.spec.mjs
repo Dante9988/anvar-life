@@ -217,6 +217,20 @@ test("responsive dashboard fits viewport; sign-out removes client data", async (
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+  const navigation = page.getByRole("navigation", { name: "Workspace" });
+  for (const name of [
+    "Lead workspace",
+    "Performance",
+    "Team & access",
+    "Agency settings",
+  ]) {
+    await expect(
+      navigation.getByRole("button", { name, exact: true }),
+    ).toBeInViewport({ ratio: 1 });
+  }
+  expect(
+    await navigation.evaluate((el) => el.scrollWidth <= el.clientWidth),
+  ).toBe(true);
   await page.screenshot({
     path: info.outputPath("private-dashboard.png"),
     fullPage: true,

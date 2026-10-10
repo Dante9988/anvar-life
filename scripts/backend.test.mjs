@@ -265,3 +265,98 @@ test("OAuth callback rejects missing verifier or arbitrary redirect before remot
     (e) => e.status === 400,
   );
 });
+
+test("server independently removes likely personal attribution before persistence", () => {
+  for (const unsafe of [
+    "person@example.test",
+    "5551234567",
+    "ssn-123-45-6789",
+    "birth-1970",
+    "contact-alice",
+    "mobile-5551234",
+    "example.com",
+    "https://example.test/?email=private",
+    "www.example.test",
+    "phone-number",
+  ]) {
+    const normalized = intake({
+      ...payload(),
+      utm: { source: "google", content: unsafe },
+    });
+    assert.deepEqual(normalized.utm, { source: "google" });
+    assert.ok(!JSON.stringify(normalized.utm).includes(unsafe));
+  }
+  fails(
+    () => intake({ ...payload(), utm: { campaign: "x".repeat(101) } }),
+    400,
+  );
+  fails(
+    () => intake({ ...payload(), utm: { campaign: ["first", "second"] } }),
+    400,
+  );
+  fails(() => intake({ ...payload(), utm: { referrer: "private" } }), 400);
+});
+
+test("safe attribution preserves campaign and standard email medium with stable ordering", () => {
+  const first = intake({
+    ...payload(),
+    utm: { campaign: "fall_2026", medium: "email", source: "newsletter" },
+  });
+  const second = intake({
+    ...payload(),
+    utm: { source: "newsletter", campaign: "fall_2026", medium: "email" },
+  });
+  assert.deepEqual(first.utm, {
+    source: "newsletter",
+    medium: "email",
+    campaign: "fall_2026",
+  });
+  assert.equal(JSON.stringify(first), JSON.stringify(second));
+});
+
+test("intake runtime guard rejects any direct public-table privileges and ownership", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(
+    new URL("../server/intake.mjs", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    source,
+    /SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER/,
+  );
+  assert.match(source, /t\.relowner=r\.oid/);
+  assert.match(source, /runtime\.rows\[0\]\.can_access_tables/);
+  assert.match(source, /runtime\.rows\[0\]\.rolbypassrls/);
+});
+
+test("real Postgres guard catches write-only roles even without SELECT", async () => {
+  const { PGlite } = await import("@electric-sql/pglite");
+  const { INTAKE_ROLE_CHECK_SQL } = await import("../server/intake.mjs");
+  const db = new PGlite();
+  try {
+    await db.exec(
+      "CREATE ROLE intake_guard_test; CREATE TABLE public.guard_test(id integer); SET ROLE intake_guard_test;",
+    );
+    assert.equal(
+      (await db.query(INTAKE_ROLE_CHECK_SQL)).rows[0].can_access_tables,
+      false,
+    );
+    await db.exec(
+      "RESET ROLE; GRANT UPDATE ON public.guard_test TO intake_guard_test; SET ROLE intake_guard_test;",
+    );
+    assert.equal(
+      (await db.query(INTAKE_ROLE_CHECK_SQL)).rows[0].can_access_tables,
+      true,
+    );
+    assert.equal(
+      (
+        await db.query(
+          "SELECT has_table_privilege(current_user,'public.guard_test','SELECT') AS allowed",
+        )
+      ).rows[0].allowed,
+      false,
+    );
+  } finally {
+    await db.close();
+  }
+});

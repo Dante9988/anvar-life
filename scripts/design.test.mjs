@@ -12,9 +12,10 @@ test('brand typography and images are self-hosted; marks work on both background
  assert.match(css,/font-display:swap/);assert.match(css,/prefers-reduced-motion:reduce/);
  for(const file of ['dist/index.html','dist/veterans/index.html']){
   const html=read(file);assert.match(html,/family-640.webp 640w/);assert.match(html,/loading="lazy"/);
-  assert.doesNotMatch(html,/fonts.googleapis|fonts.gstatic|<iframe|<script[^>]+src=/);
+  assert.doesNotMatch(html,/fonts.googleapis|fonts.gstatic|<iframe/);
   assert.match(html,/Illustrative photo; not a customer testimonial/);
   assert.match(html,/brand-mark-light.svg/);
+  assert.match(html,/<script type="module" src="\/attribution\.mjs"><\/script>/);
  }
 });
 test('core brand text combinations meet AA normal text contrast',()=>{
