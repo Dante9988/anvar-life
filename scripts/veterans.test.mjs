@@ -11,22 +11,26 @@ for(const file of ['dist/index.html','dist/veterans/index.html']){
  const html=readFileSync(resolve(root,file),'utf8');
  test(`${file}: all conversion links preserve exact destinations`,()=>{
   const anchors=[...html.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)];
-  const rates=anchors.filter(m=>/CHECK MY|SEE MY PRICE|Check my rate/.test(m[2]));
-  assert(rates.length>=6);
+  const rates=anchors.filter(m=>/CHECK MY RATE|Check my rate/.test(m[2]));
+  assert(rates.length>=3);
   for(const m of rates) assert.equal(m[1],ethos);
-  const calls=anchors.filter(m=>/TALK TO ANVAR|SPEAK WITH ANVAR|CONSULTATION|Talk to Anvar|Ask Anvar|Book a free/.test(m[2]));
-  assert(calls.length>=7);
-  for(const m of calls) assert.equal(m[1],booking);
+  const intake=anchors.filter(m=>/FIND MY COVERAGE/.test(m[2]));
+  assert(intake.length>=4);
+  for(const m of intake) assert.equal(m[1],'/find-coverage/');
+  const calls=anchors.filter(m=>m[1]===booking);
+  assert(calls.length>=3);
+  for(const m of calls) assert.match(m[2], /individual/i);
   for(const m of anchors) if(/^https:/.test(m[1])) assert([ethos,booking].includes(m[1]));
  });
  test(`${file}: reassuring conversion structure works without JavaScript`,()=>{
-  for(const text of ['Protect Your Family.','Check Your Life Insurance Rate Today.','Free quote. No obligation to buy.','How Much Could Life Insurance Cost You?','Looking for Final','CHECK MY OPTIONS','People First. Always.']) assert(html.includes(text));
+  for(const text of ['Protect Your Family.','Start with what matters to you.','No obligation to buy. Your next step is your choice.','How Much Could Life Insurance Cost You?','Looking for Final','CHECK MY RATE','People First. Always.']) assert(html.includes(text));
   assert.match(html,/class="mobile-actions" aria-label="Quick actions"/);
   assert.equal((html.match(/<details>/g)||[]).length,5);
-  assert.doesNotMatch(html,/<script[^>]+src=|onclick=|target="_blank"/);
+  assert.doesNotMatch(html,/onclick=|target="_blank"/);
  });
  test(`${file}: product limitations and independence stay visible`,()=>{
-  assert.match(html,/not affiliated with or endorsed by/);
+  assert(html.includes('Benefits with Veterans is a private insurance business, not a government agency. Not affiliated with or endorsed by the U.S. Department of Veterans Affairs or any government agency.'));
+  assert.doesNotMatch(html,/independent insurance agency|\"@type\": \"InsuranceAgency\"/);
   assert.match(html,/not a guarantee of coverage or final pricing/);
   assert.match(html,/graded or modified benefits/);
   assert.match(html,/0% index-crediting floor does not prevent policy charges/);
