@@ -77,6 +77,8 @@ test('history has honest attribution, unknowns, disabled calling, and mobile fit
   await expect(page.getByRole('button', { name: 'Kixie click-to-call unavailable' })).toBeDisabled();
   await expect(page.getByText('Live collection, Kixie click-to-call', { exact: false })).toBeVisible();
   await expect(page.locator('.call-table [data-label="Vendor / agent"]').first()).toContainText('Fictional Harbor Leads');
+  await expect(page.locator('#call-status-filter')).toHaveAccessibleName('Call status');
+  await expect(page.locator('#call-vendor-filter')).toHaveAccessibleName('Vendor attribution');
   await expect(page.getByText('Inbound · 3m 12s')).toBeVisible();
   await expect(page.getByText('Consent: Unknown')).toHaveCount(4);
   await expect(page.locator('a[href^="tel:"]')).toHaveCount(0);
@@ -98,6 +100,8 @@ test('agent cannot read economics; detail has no sale control', async ({ page })
   const control = await setup(page, { role: 'agent' }); await openCall(page);
   await expect(page.getByRole('button', { name: 'Production economics' })).toHaveCount(0);
   expect(control.reads).not.toContain('/api/admin/production');
+  await expect(page.locator('#call-disposition')).toHaveAccessibleName('Call disposition');
+  await expect(page.getByLabel('Call disposition', { exact: true })).toHaveCount(1);
   expect(await page.getByLabel('Call disposition', { exact: true }).locator('option').allTextContents()).not.toContain('Sold');
 });
 test('rejected save preserves edits and explicit retry saves a held callback with CSRF', async ({ page }) => {
@@ -210,7 +214,8 @@ test('owner explicitly verifies a candidate identity before linking; admins cann
   const control = await setup(page); control.record.lead_id = null; control.record.lead_name = null;
   control.candidates = [{ lead_id: leadId, name: fixture.lead_name, state: 'TX', product: 'whole_life', reason: 'possible_phone_match' }];
   await openCall(page); await expect(page.getByText('A phone match alone is insufficient.', { exact: false })).toBeVisible();
-  await page.getByLabel('Possible lead matches').selectOption(leadId);
+  await expect(page.locator('#call-lead-candidate')).toHaveAccessibleName('Possible lead matches');
+  await page.getByLabel('Possible lead matches', { exact: true }).selectOption(leadId);
   await expect(page.getByLabel('Verified lead ID')).toHaveValue(leadId);
   await page.getByLabel('Identity verification reason').fill('Fictional test identity confirmed by owner.');
   await page.getByRole('button', { name: 'Confirm verified lead link' }).click();
