@@ -7,7 +7,7 @@
     "check": "node scripts/validate.mjs && node --test scripts/*.test.mjs && npm run test:db",
     "build": "node scripts/prepare-deployment.mjs && npm run check",
     "dev": "node scripts/dev-server.mjs",
-    "test:db": "node --test tests/database.test.mjs",
+    "test:db": "node --test --test-concurrency=1 tests/*database.test.mjs",
     "test:e2e": "playwright test"
   },
   "engines": {

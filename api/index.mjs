@@ -15,6 +15,8 @@ import {
 } from "../server/auth.mjs";
 import { submit } from "../server/intake.mjs";
 import { UUID, only, leadPatch, STATUSES } from "../server/validation.mjs";
+import { kixieConfig, verifyKixieRequest, receiveKixie } from "../server/kixie.mjs";
+import { handleCrm } from "../server/crm-api.mjs";
 function checked(result) {
   if (result.error) {
     const code = result.error.code;
@@ -32,7 +34,7 @@ function checked(result) {
         "CONFLICT",
         "A matching pending record already exists.",
       );
-    if (code === "22023" || code === "23514")
+    if (["22023", "23514", "23502", "22P02", "22007", "22008", "22003"].includes(code))
       throw new HttpError(
         422,
         "INELIGIBLE",
@@ -73,6 +75,15 @@ export default async function handler(req, res) {
         consent: CONSENT,
         products: PRODUCTS,
       });
+    if (path === "/api/integrations/kixie") {
+      if (method !== "POST") throw new HttpError(405, "METHOD_NOT_ALLOWED", "Use POST for webhook events.");
+      const integration = kixieConfig(process.env, c);
+      verifyKixieRequest(req, integration);
+      const result = await receiveKixie(req, integration, await body(req));
+      return json(res, result.replayed ? 200 : 202, {
+        accepted: true, replayed: result.replayed, applied: result.applied,
+      });
+    }
     requireConfig(c);
     if (path === "/api/intake" && method === "POST") {
       origin(req, c);
@@ -96,6 +107,7 @@ export default async function handler(req, res) {
       throw new HttpError(404, "NOT_FOUND", "Endpoint not found.");
     const a = await authenticated(req, res, c);
     if (!["GET", "HEAD"].includes(method)) csrf(req, c);
+    if (await handleCrm({ req, res, c, a, url, path, method, checked })) return;
     if (path === "/api/admin/session" && method === "GET")
       return json(res, 200, {
         authenticated: true,

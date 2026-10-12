@@ -50,3 +50,7 @@ Read [the API contract](docs/api-contract.md), [release boundaries and gates](do
 ## Design and assets
 
 Self-hosted Newsreader and Manrope fonts (SIL Open Font License), navy/ivory/gold/crimson design tokens, original V marks and responsive family photography retain the Phase 2 identity. The family photo is illustrative, not a customer or veteran endorsement: RDNE Stock project / Pexels photo 6149192, https://www.pexels.com/photo/family-of-different-ages-hugging-6149192/ . Legacy teaching-math tests remain as reference; that module is not a live quote engine.
+
+## Kixie inbound CRM review branch
+
+The private `/admin/calls/` workspace extends the existing agency dashboard with a fictional-only Kixie call adapter, identity review, prepared callbacks and explicit policy economics. Live calling, SMS, recording playback and customer collection stay disabled. See [the acquisition playbook](docs/lead-acquisition-kixie-playbook.md), [Kixie release gates](docs/kixie-release.md), [backend setup](docs/backend-setup.md) and [API contract](docs/api-contract.md). No data is imported from the separate private CRM.
