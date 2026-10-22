@@ -1,6 +1,10 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-// Release decisions remain an owner/marketing review process; no environment-specific build block.
+// This branch contains unapproved review materials. A second guard blocks manual
+// Vercel deployments even if the branch-level Git integration guard is bypassed.
+if (process.env.VERCEL === '1') {
+  throw new Error('REVIEW_ONLY: Vercel deployment is blocked until the landing drafts are explicitly approved for publication.');
+}
 const root = resolve(import.meta.dirname, '..');
 const sourceOrigin = 'https://www.benefitswithveterans.com';
 const configured = process.env.SITE_URL?.trim() || sourceOrigin;

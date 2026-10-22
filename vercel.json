@@ -60,5 +60,10 @@
       "source": "/api/:path*",
       "destination": "/api/index?route=:path*"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "review/single-agent-conversion": false
+    }
+  }
 }
